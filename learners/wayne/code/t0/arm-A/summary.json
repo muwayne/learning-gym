@@ -1,0 +1,40 @@
+{
+  "arm": "A",
+  "config": {
+    "seed": 20260829,
+    "arch": "3-16-16-16-1",
+    "act": "tanh",
+    "opt": "adam",
+    "lr": 0.001,
+    "batch": 256,
+    "steps": 5000,
+    "note": "v3 baseline replication"
+  },
+  "n_params": 625,
+  "final_loss_last100": 0.259306355714798,
+  "recall_unstable": 0.964,
+  "recall_stable": 0.878,
+  "recall_gap_pp": 8.599999999999996,
+  "mid_mass_0p2_0p8": 0.082,
+  "saturated_mass": 0.617,
+  "family_recall": {
+    "broad/unstable": 0.9641,
+    "broad/stable": 0.8807,
+    "force_edge/unstable": 0.963,
+    "force_edge/stable": 0.8571,
+    "slip_edge/stable": 0.8485,
+    "pose_edge/stable": 0.9
+  },
+  "grad_norm_last100_mean": {
+    "layer1": 0.26348716363310815,
+    "layer2": 0.20869252912700176,
+    "layer3": 0.04099637934938073,
+    "layer4": 0.049570740200579166
+  },
+  "param_max_abs_delta": {
+    "layer1": 1.8454170227050781,
+    "layer2": 1.4697840213775635,
+    "layer3": 1.581636905670166,
+    "layer4": 0.7637375593185425
+  }
+}

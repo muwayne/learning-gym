@@ -1,0 +1,30 @@
+date,session,claim,predicted,actual,hit,note
+2026-08-29,T0-S01,baseline两类recall差<5pp,不成立(押几何不对称),v3实测gap=8.6pp且方向翻转,命中,判于学员选定的v3结构
+2026-08-29,T0-S01,测试集σ(z)直方图双峰,成立(中间=未观测潜变量的不可约不确定),v3两端61.7%中间8.2%,命中,方向对;机制对本toy部分适用(翻转与x无关)
+2026-08-29,A1-S01,实现与手算±0.02内一致,一致,修正转置后检查A通过,命中,转置bug由shape报错抓获
+2026-08-29,A1-S01,去√d且d=256时每行最大概率>0.99,接近饱和,d=64即1.0000,命中,Q=K时有缩放也饱和(对角优势)
+2026-08-29,A1-S01,mask(0/2)后第0行概率和,仍=1,行和=[1;1;1],命中,O行0变化:[1.72,0.28]→[1.89,0.11]
+2026-08-30,T0-S02,B组早期loss相比A,变大/差于A,A即降B钉死0.693;无爆炸尖刺,命中(方向),机制反转:tanh饱和昏迷而非overshoot
+2026-08-30,T0-S02,B组force梯度分量远大于其他列,大得多,相对大40-300x但绝对值全体坍缩<1e-4,部分命中,预期爆炸实为集体消失
+2026-08-30,T0-S02,B组Adam能否追平A,接近但有差距,完全未救回:loss=0.6931纯猜地板,未命中,梯度被tanh掐灭Adam无米下锅
+2026-08-30,T0-S02,加试force×10症状,昏迷,带伤能学:loss 0.3218/中间质量21.3%,未命中,剂量-症状是相变非渐变;两次押注互贴错剂量标签
+2026-08-30,T0-S02,C组训练loss vs A,更低,0.1471(A为0.2593;甚至低于0.20地板),命中,放回抽样重复样本可硬背:有限考卷钻到人群地板下
+2026-08-30,T0-S02,C组平衡测试unstable recall,0.5-0.7,0.45,未命中(窄差0.05),方向量级感对;区间下沿保守
+2026-08-30,T0-S02,C组σ整体偏向,往stable,直方图右移;stable recall升至0.94,命中,附加:中间质量8.2%→39.6%少数类边界潦草
+2026-08-30,T0-S02,D组冻结后最终loss,明显变差>0.30,0.2827小损档,未命中,冻结≠摘除:随机投影信息保真+上层适配;Δ=0恰等通过
+2026-08-30,T0-S02,E组最终loss,0.35-0.40,0.4428,未命中(窄差),尾部躺平=容量不足非欠训练
+2026-08-30,T0-S02,E组中间质量,约46%,50.4%,命中,锚定v2宽3的46%按窄一档外推
+2026-08-30,T0-S02,E组哪族边界先崩(软注),pose,pose_edge -25pp;force_edge -28.6pp略大,部分命中,n=20-28一样本值5pp排序不可判:分母课
+2026-09-01,A1-S02,H=1+W_O单位阵退化版与S01输出,完全一致,检查A通过一字不差,命中,机制:不分头=恒等切分+单位阵=不变换;√d_h退化为√d
+2026-09-01,A1-S02,causal后P第0行,=[1;0;0],检查B通过,命中,机制:候选只剩自己;softmax独苗必占100%与分数无关
+2026-09-01,A1-S02,causal后permutation equivariance,被破坏(mask按位置写死),causal=True时打乱输入输出不再跟随,命中,启示:顺序不对称性mask白送;距离仍需position encoding(S03门票)
+2026-09-04,T0-S03,E增大时XY-support exit更多且更早,更多且更早,E1/E4/E16 exits=2/16/20且mean first exit=44.5/69.0/30.75,部分命中,数量单调增加；时机仅E16提前
+2026-09-04,T0-S03,SR随E逐步下降,逐步下降,20/20→20/20→7/20,部分命中,端点方向对但E1/E4 plateau且E16 sharp degradation
+2026-09-04,T0-S03,E与SR关系偏linear,linear/gradual,plateau后sharp degradation,未命中,运行前从threshold-like改押linear；原始直觉更贴近
+2026-09-04,T0-S03,recovery data使E16 SR上升,上升,7/20→13/20,命中,paired flips为7次败转胜和1次胜转败；directional evidence非泛化证明
+2026-09-04,T0-S03,recovery data使fixed clean holdout loss升高,升高,1.4767e-3→1.4882e-3（+0.78%）,命中(方向),代价很小；自己的perturbed holdout不可横比
+2026-09-08,A1-S03,fixed batch训练400 steps后的loss,<0.10,0.0113,命中,重复同一shifted batch后成功记住；只支持trainability不支持objective semantics或generalization
+2026-09-08,A1-S03,exact-context B的正确空格概率高于bare A,更高,A约0且rank16；B为0.9997且rank1,命中,证明exact training-context match影响大；A/B仍同时改变position与preceding tokens
+2026-09-08,A1-S03,y=x control的own-objective loss,更容易且更快下降,0.0003；baseline为0.1491,命中,跨objective的loss数值不作公平模型质量比较
+2026-09-08,A1-S03,y=x control的true next-token validation,显著更差,loss 11.7204 accuracy 0.013；baseline为0.7361和0.836,命中,错误objective可优化成功但无法通过统一task contract
+2026-09-09,T3-S07,同reference下critic指导组实际对齐误差更小,B优于A；前提critic评分对应真实回报,A为0.250798mm与0/16成功；B为0.060882mm与16/16成功,命中,固定seed与final600；terminal CPU toy；16个配对起点均改善；不外推真实RLT能力

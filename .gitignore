@@ -1,0 +1,7 @@
+__pycache__/
+.venv/
+*.npz
+*.pt
+*.ckpt
+*.safetensors
+losses*.npy

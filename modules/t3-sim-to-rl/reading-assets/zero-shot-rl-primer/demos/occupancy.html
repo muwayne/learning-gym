@@ -1,0 +1,13 @@
+<section class="zs-demo" aria-labelledby="sr-title">
+  <h4 id="sr-title">参考计算 · 同一张足迹表，换一个奖励</h4>
+  <p class="zs-note">Current-state reward；没有 terminal。切换 reward 只重新评估当前选定的策略。</p>
+  <div class="zs-controls">
+    <label>固定策略<select id="sr-policy"><option value="right">一直向右 πR</option><option value="left">一直向左 πL</option><option value="center">到格 2 后停住</option></select></label>
+    <label>奖励所在格<select id="sr-goal"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4" selected>4</option></select></label>
+    <label>折扣 γ <output id="sr-gamma-label">0.50</output><input id="sr-gamma" type="range" min="0.1" max="0.9" step="0.05" value="0.5"></label>
+  </div>
+  <svg id="sr-corridor" viewBox="0 0 660 110" role="img" aria-label="五格走廊、策略动作与奖励位置"></svg>
+  <div id="sr-matrix" class="table-wrap"></div>
+  <div id="sr-stats" class="zs-stats" aria-live="polite"></div>
+  <p class="zs-note">表格由 M = (I − γPπ)⁻¹ 计算。数字是 discounted occupancy，行和大于 1；没有神经网络或 optimizer update。</p>
+</section>

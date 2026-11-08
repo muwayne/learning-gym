@@ -1,0 +1,15 @@
+<section class="zs-demo" aria-labelledby="proj-title">
+  <h4 id="proj-title">参考计算 · 一个目标怎样变成 z，又怎样丢失细节</h4>
+  <p class="zs-note">指定 path-graph Laplacian 基底；ρ = 1/5，B = √5 U。先投影 reward，再用精确求解器构造参考策略。这里没有 learned B。</p>
+  <div class="zs-controls">
+    <label>奖励所在格<select id="proj-goal"><option value="0">0</option><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option></select></label>
+    <label>保留维度 d<select id="proj-rank"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5 · full rank</option></select></label>
+    <label>起点 s<select id="proj-start"><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></label>
+    <label>第一动作 a<select id="proj-action"><option value="0">left</option><option value="1">stay</option><option value="2" selected>right</option></select></label>
+  </div>
+  <svg id="proj-bars" viewBox="0 0 660 245" role="img" aria-label="原始奖励与低秩重构奖励的比较"></svg>
+  <svg id="proj-corridor" viewBox="0 0 660 110" role="img" aria-label="对投影奖励求解得到的参考策略"></svg>
+  <div id="proj-vectors" class="zs-vectors" aria-live="polite"></div>
+  <div id="proj-values" class="table-wrap"></div>
+  <p class="zs-note">本面板采用 next-state Q。F = Mπ(s,a,·)B，z = Bᵀr/5；Fᵀz 评估的是重构奖励 r̂。Full rank 才精确恢复本例原奖励。近似 occupancy 可以出现负数。</p>
+</section>

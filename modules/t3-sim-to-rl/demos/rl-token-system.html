@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RL Token · Two-stage system map</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: light-dark(#f5f7fb, #11151c);
+      --surface: light-dark(#ffffff, #1a2029);
+      --surface-2: light-dark(#edf2f8, #232b36);
+      --text: light-dark(#172033, #edf3fb);
+      --muted: light-dark(#58657a, #aab7c8);
+      --line: light-dark(#cbd5e1, #465262);
+      --frozen: light-dark(#1d6fb8, #69b7ff);
+      --train: light-dark(#a34f08, #ffad5c);
+      --data: light-dark(#38724b, #75d194);
+      --warning: light-dark(#8b375d, #ee8eb8);
+      --shadow: 0 12px 36px light-dark(rgba(45, 55, 72, .10), rgba(0, 0, 0, .24));
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    main {
+      width: min(1100px, calc(100% - 32px));
+      margin: 32px auto;
+    }
+
+    header { margin-bottom: 20px; }
+    h1 { margin: 0 0 6px; font-size: clamp(1.55rem, 3vw, 2.25rem); font-weight: 500; }
+    h2 { margin: 0 0 8px; font-size: 1.15rem; }
+    p { margin: 0; }
+    .subtitle { color: var(--muted); }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    button {
+      min-height: 42px;
+      padding: 8px 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface);
+      color: var(--text);
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button[aria-selected="true"] {
+      border-color: var(--text);
+      background: var(--text);
+      color: var(--bg);
+    }
+
+    .panel {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 18px;
+      margin: 14px 0 20px;
+      color: var(--muted);
+      font-size: .92rem;
+    }
+
+    .legend span { display: inline-flex; align-items: center; gap: 7px; }
+    .dot { width: 11px; height: 11px; border-radius: 50%; background: currentColor; }
+    .is-frozen { color: var(--frozen); }
+    .is-train { color: var(--train); }
+    .is-data { color: var(--data); }
+    .is-warning { color: var(--warning); }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      align-items: stretch;
+      gap: 10px;
+    }
+
+    .node {
+      display: grid;
+      place-items: center;
+      min-height: 92px;
+      padding: 12px 10px;
+      border: 2px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface-2);
+      text-align: center;
+    }
+
+    .node strong { display: block; font-weight: 500; }
+    .node small { display: block; margin-top: 4px; color: var(--muted); }
+    .node.frozen { border-color: var(--frozen); }
+    .node.train { border-color: var(--train); }
+    .node.data { border-color: var(--data); }
+
+    .arrow {
+      display: grid;
+      place-items: center;
+      align-self: center;
+      color: var(--muted);
+      font-size: 1.45rem;
+    }
+
+    .stage-one { grid-template-columns: 1.2fr auto 1.2fr auto 1fr auto 1.2fr; }
+
+    .stage-two {
+      grid-template-columns: minmax(130px, .9fr) auto minmax(170px, 1.25fr) auto minmax(170px, 1.25fr) auto minmax(145px, 1fr);
+    }
+
+    .feedback {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      align-items: center;
+      gap: 10px;
+      width: min(760px, 100%);
+      margin: 18px auto 0;
+    }
+
+    .feedback .node { min-height: 76px; }
+    .update-note {
+      margin-top: 18px;
+      padding-left: 12px;
+      border-left: 4px solid var(--train);
+      color: var(--muted);
+    }
+
+    .audit-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .audit-item {
+      padding: 16px;
+      border-left: 4px solid var(--line);
+      background: var(--surface-2);
+    }
+
+    .audit-item strong { display: block; margin-bottom: 4px; }
+    .audit-item:nth-child(odd) { border-left-color: var(--data); }
+    .audit-item:nth-child(even) { border-left-color: var(--warning); }
+
+    .boundary {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border: 1px solid var(--warning);
+      border-radius: 12px;
+      color: var(--text);
+    }
+
+    code { color: inherit; }
+
+    @media (max-width: 820px) {
+      main { width: min(100% - 20px, 680px); margin: 20px auto; }
+      .panel { padding: 16px; }
+      .flow, .stage-one, .stage-two, .feedback {
+        grid-template-columns: 1fr;
+        width: 100%;
+      }
+      .arrow { min-height: 28px; transform: rotate(90deg); }
+      .audit-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>RL Token · two-stage system map</h1>
+      <p class="subtitle">先学 compact state interface，再用 frozen VLA 周围的小型 learner 做 online adaptation。</p>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="RLT stages">
+      <button id="stage1-tab" type="button" role="tab" aria-selected="true" aria-controls="stage1-panel">Stage 1 · learn <code>z_rl</code></button>
+      <button id="stage2-tab" type="button" role="tab" aria-selected="false" aria-controls="stage2-panel">Stage 2 · online RL</button>
+      <button id="audit-tab" type="button" role="tab" aria-selected="false" aria-controls="audit-panel">Evidence audit</button>
+    </nav>
+
+    <section id="stage1-panel" class="panel" role="tabpanel" aria-labelledby="stage1-tab">
+      <h2>Stage 1 · compact state interface</h2>
+      <p class="subtitle">Reconstruction 训练 token module；它回答“能否压缩并还原”，还不回答“是否对 value/control 有用”。</p>
+      <div class="legend" aria-label="Legend">
+        <span class="is-frozen"><i class="dot"></i>VLA source</span>
+        <span class="is-train"><i class="dot"></i>updated in Stage 1</span>
+      </div>
+      <div class="flow stage-one" aria-label="Stage 1 flow">
+        <div class="node frozen"><div><strong>VLA embeddings</strong><small>internal representation</small></div></div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="node train"><div><strong>Encoder</strong><small>compress</small></div></div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="node train"><div><strong>RL token <code>z_rl</code></strong><small>compact latent state</small></div></div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="node train"><div><strong>Decoder</strong><small>reconstruct embeddings</small></div></div>
+      </div>
+      <p class="update-note"><strong>After Stage 1:</strong> VLA 与 token module 都冻结；<code>z_rl</code> 作为 downstream actor/critic 的 state input。</p>
+    </section>
+
+    <section id="stage2-panel" class="panel" role="tabpanel" aria-labelledby="stage2-tab" hidden>
+      <h2>Stage 2 · online interaction and parameter update</h2>
+      <p class="subtitle">Actor/critic 才是 online learner；执行产生的新 data 会改变后续 rollout 使用的 parameters。</p>
+      <div class="legend" aria-label="Legend">
+        <span class="is-frozen"><i class="dot"></i>frozen</span>
+        <span class="is-train"><i class="dot"></i>updated online</span>
+        <span class="is-data"><i class="dot"></i>interaction data</span>
+      </div>
+      <div class="flow stage-two" aria-label="Stage 2 action path">
+        <div class="node data"><div><strong>Observation</strong><small>critical-phase state</small></div></div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="node frozen"><div><strong>Frozen VLA</strong><small><code>z_rl</code> + reference chunk</small></div></div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="node train"><div><strong>Small actor / critic</strong><small>refine + value</small></div></div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="node data"><div><strong>Executed action chunk</strong><small>environment transition</small></div></div>
+      </div>
+      <div class="feedback" aria-label="Stage 2 feedback path">
+        <div class="node data"><div><strong>Reward / done</strong><small>physical predicate</small></div></div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="node data"><div><strong>Replay</strong><small>chunk-time transition</small></div></div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="node train"><div><strong>Actor / critic update</strong><small>later behavior changes</small></div></div>
+      </div>
+      <p class="update-note"><strong>Update boundary:</strong> gradients stop at the small actor/critic. Frozen VLA、token module 与 base reference policy 不随 online RL 更新。</p>
+    </section>
+
+    <section id="audit-panel" class="panel" role="tabpanel" aria-labelledby="audit-tab" hidden>
+      <h2>Evidence audit · claim 到底走到哪一层</h2>
+      <p class="subtitle">每一层证据只回答自己的问题；后层不能由前层 loss 自动推出。</p>
+      <div class="audit-grid">
+        <div class="audit-item"><strong>1 · Reconstruction</strong><span>Token 是否保留可重建的 VLA information？</span></div>
+        <div class="audit-item"><strong>2 · Value/state probe</strong><span>这些 information 是否与 return、phase、relative pose 有关？</span></div>
+        <div class="audit-item"><strong>3 · Toy online RL</strong><span>Replay、chunk credit 与 actor/critic update path 是否跑通？</span></div>
+        <div class="audit-item"><strong>4 · Held-out closed-loop</strong><span>真实 behavior、throughput、安全与 full-task regression 是否改善？</span></div>
+      </div>
+      <p class="boundary"><strong>Boundary:</strong> RLT 属于 <code>online RL / deployment-time adaptation</code>；它包含 interaction 之间的 parameter update，不等于单次 forward 内增加计算的 <code>inference-time compute</code>。</p>
+    </section>
+  </main>
+
+  <script>
+    const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+    function selectTab(tab) {
+      tabs.forEach((item) => {
+        const selected = item === tab;
+        item.setAttribute('aria-selected', String(selected));
+        document.getElementById(item.getAttribute('aria-controls')).hidden = !selected;
+      });
+      tab.focus();
+    }
+
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => selectTab(tab));
+      tab.addEventListener('keydown', (event) => {
+        if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+        event.preventDefault();
+        const direction = event.key === 'ArrowRight' ? 1 : -1;
+        selectTab(tabs[(index + direction + tabs.length) % tabs.length]);
+      });
+    });
+  </script>
+</body>
+</html>

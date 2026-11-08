@@ -1,0 +1,462 @@
+<!doctype html>
+<!-- Generated reading edition. Source: rl-control-review-primer.md; SHA256: f278bbdb3b2aa2e780a6deffa297c9fb2fc012e735538e38a647cfdd8a6237ac. pandoc 3.7.0.2. Edit the Markdown source first. --><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>机器人 RL 温习：PPO、TD3、FB 与 DexLab</title><style>:root{color-scheme:light;--ink:#213341;--muted:#536777;--accent:#126578;--line:#d9e4e9;--paper:#fff;--tint:#f1f7f9}
+*{box-sizing:border-box}html{scroll-padding-top:24px}body{margin:0;color:var(--ink);background:#f5f7f8;font:17px/1.9 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}a{color:var(--accent);text-underline-offset:.2em}a:hover{color:#053946}header{padding:44px 40px 32px;background:#163e4b;color:#fff}header .eyebrow{font-size:13px;letter-spacing:.14em;color:#bfe3e8}header h1{font-size:clamp(26px,3vw,39px);line-height:1.4;max-width:1100px;margin:12px 0}header p{font-size:15px;color:#d2e6ea;margin:0}.layout{max-width:1480px;margin:auto;display:grid;grid-template-columns:285px minmax(0,1fr);gap:28px;padding:28px}nav{align-self:start;position:sticky;top:20px;max-height:calc(100vh - 40px);overflow:auto;padding:18px;background:var(--paper);border:1px solid var(--line);border-radius:12px;font-size:13px;line-height:1.7}nav summary{font-size:16px;font-weight:700;cursor:pointer}nav ul{list-style:none;padding-left:12px}nav>details>ul{padding-left:0}nav li{margin:8px 0}nav a{text-decoration:none}main{min-width:0;max-width:1060px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:36px 44px}h2{margin:64px 0 20px;padding-top:22px;border-top:2px solid var(--line);font-size:26px;line-height:1.5;color:#143e4c}h2:first-of-type{margin-top:30px}h3{margin:42px 0 18px;font-size:21px;line-height:1.55}h4{font-size:18px;margin-top:30px}p{margin:16px 0}strong{font-weight:650}blockquote{border-left:4px solid #4892a4;background:var(--tint);margin:20px 0;padding:8px 20px;color:#385362;font-size:15px}blockquote p{margin:10px 0}code{font: .87em/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;background:#eff3f5;border-radius:4px;padding:2px 5px;overflow-wrap:anywhere}pre{background:#f0f5f7;border:1px solid var(--line);border-radius:10px;padding:18px;overflow-x:auto}pre code{padding:0;background:none;white-space:pre;overflow-wrap:normal}.table-wrap{overflow-x:auto;margin:24px 0;border:1px solid var(--line);border-radius:9px}table{border-collapse:collapse;width:100%;font-size:14px;line-height:1.75;margin:0}th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;min-width:90px}th{background:#e9f3f5;color:#174c5b;font-weight:650}tbody tr:nth-child(even){background:#f8fafb}tr:last-child td{border-bottom:0}table p{margin:0}math{font-family:"STIX Two Math","Cambria Math",math;font-size:1.08em}.math.display{display:block;overflow-x:auto;padding:22px 14px;margin:24px 0;background:#f5f8fa;border:1px solid var(--line);border-radius:10px}.math.display math{margin:auto;white-space:nowrap;min-width:max-content}.diagram{margin:26px 0;padding:20px 12px;border:1px solid var(--line);border-radius:12px;background:#fcfefe;overflow-x:auto}.diagram svg{display:block;width:100%;min-width:500px;height:auto;margin:auto;max-width:740px}footer{font-size:12px;color:var(--muted);margin:44px 0 0;padding-top:18px;border-top:1px solid var(--line)}@media(max-width:1020px){.layout{display:block;max-width:940px;padding:18px}nav{position:static;max-height:300px;margin-bottom:20px}main{padding:24px}}@media(max-width:580px){body{font-size:16px}header{padding:28px 20px}.layout{padding:10px}main{padding:20px 16px}h2{font-size:23px}h3{font-size:20px}.diagram{padding:12px 6px}}@media print{body{background:white;font-size:11pt}header{background:white;color:#163e4b;padding:0}header .eyebrow,header p{color:#536777}nav{display:none}.layout{display:block;padding:0}main{border:0;padding:0;max-width:none}.diagram,pre,.math.display{break-inside:avoid}.diagram svg{min-width:0}h2,h3,h4{break-after:avoid}a{color:inherit}.table-wrap{overflow:visible}table{font-size:9pt}}
+.function-demo{border:1px solid #a2c5ce;border-radius:12px;padding:20px;margin:26px 0;background:#f6fafb}.function-demo h4{margin:0 0 8px}.function-demo svg{width:100%;max-height:280px;display:block;background:white;border-radius:8px}.function-demo svg text{font:14px system-ui;fill:#536777}.function-demo label{display:block;margin-top:15px;font-size:15px;font-weight:600}.function-demo output{float:right;font-variant-numeric:tabular-nums}.function-demo input[type=range]{width:100%;accent-color:#126578;height:32px}.function-demo select{font:inherit;padding:6px 12px;background:white;color:#213341;border:1px solid #a2c5ce;border-radius:6px}.demo-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 0}.demo-results div{background:white;border:1px solid #d9e4e9;border-radius:8px;padding:12px;font-size:14px}.demo-results strong{display:block;font-size:22px;color:#126578;font-variant-numeric:tabular-nums}.demo-note{font-size:14px;color:#536777}@media(max-width:580px){.demo-results{grid-template-columns:1fr}}</style></head><body><header><div class="eyebrow">T2 / T3 · 机器人 RL 温习</div><h1>机器人 RL 温习：PPO、TD3、FB 与 DexLab</h1><p>PPO、TD3、FB 的共同基础与差异 · HORA / AnyRotate 的仿真控制、蒸馏和部署边界</p></header><div class="layout"><nav aria-label="讲义目录"><details open><summary>阅读目录</summary><ul>
+<li><a href="#0--三条路线两个分类维度" id="toc-0--三条路线两个分类维度">0 · 三条路线，两个分类维度</a></li>
+<li><a href="#1--所有方法共享的控制闭环" id="toc-1--所有方法共享的控制闭环">1 · 所有方法共享的控制闭环</a>
+<ul>
+<li><a href="#11-stateobservation-与-history" id="toc-11-stateobservation-与-history">1.1 State、observation 与 history</a></li>
+<li><a href="#12-action-不一定是-torque" id="toc-12-action-不一定是-torque">1.2 Action 不一定是 torque</a></li>
+<li><a href="#13-terminationtruncation-与-reset" id="toc-13-terminationtruncation-与-reset">1.3 Termination、truncation 与 reset</a></li>
+</ul></li>
+<li><a href="#2--ppo新-rollout-如何变成策略更新" id="toc-2--ppo新-rollout-如何变成策略更新">2 · PPO：新 rollout 如何变成策略更新</a>
+<ul>
+<li><a href="#21-从-reinforce-到-actor-critic" id="toc-21-从-reinforce-到-actor-critic">2.1 从 REINFORCE 到 actor-critic</a></li>
+<li><a href="#22-gae两个-mask各管一件事" id="toc-22-gae两个-mask各管一件事">2.2 GAE：两个 mask，各管一件事</a></li>
+<li><a href="#23-ratio-与-clipping" id="toc-23-ratio-与-clipping">2.3 Ratio 与 clipping</a></li>
+<li><a href="#24-连续动作与可执行-policy" id="toc-24-连续动作与可执行-policy">2.4 连续动作与可执行 policy</a></li>
+</ul></li>
+<li><a href="#3--dexlabppo-teacher-后面还有什么" id="toc-3--dexlabppo-teacher-后面还有什么">3 · DexLab：PPO teacher 后面还有什么</a>
+<ul>
+<li><a href="#31-framework-复用的边界" id="toc-31-framework-复用的边界">3.1 Framework 复用的边界</a></li>
+<li><a href="#32-hora-与-anyrotate-的两阶段接线" id="toc-32-hora-与-anyrotate-的两阶段接线">3.2 HORA 与 AnyRotate 的两阶段接线</a></li>
+<li><a href="#33-sim2real-的三个接口" id="toc-33-sim2real-的三个接口">3.3 Sim2real 的三个接口</a></li>
+</ul></li>
+<li><a href="#4--td3用旧数据学习可改进策略的-q" id="toc-4--td3用旧数据学习可改进策略的-q">4 · TD3：用旧数据学习可改进策略的 Q</a>
+<ul>
+<li><a href="#41-一个-batch-的计算图" id="toc-41-一个-batch-的计算图">4.1 一个 batch 的计算图</a></li>
+<li><a href="#42-三项机制为何组合" id="toc-42-三项机制为何组合">4.2 三项机制为何组合</a></li>
+<li><a href="#43-为什么接到-rlt--expo-后更难" id="toc-43-为什么接到-rlt--expo-后更难">4.3 为什么接到 RLT / EXPO 后更难</a></li>
+</ul></li>
+<li><a href="#5--fb把训练阶段的表示用于新-reward" id="toc-5--fb把训练阶段的表示用于新-reward">5 · FB：把训练阶段的表示用于新 reward</a>
+<ul>
+<li><a href="#51-从标量-value-到-successor-measure" id="toc-51-从标量-value-到-successor-measure">5.1 从标量 value 到 successor measure</a></li>
+<li><a href="#52-哪些东西训练哪些东西测试时冻结" id="toc-52-哪些东西训练哪些东西测试时冻结">5.2 哪些东西训练，哪些东西测试时冻结</a></li>
+<li><a href="#53-fb-在灵巧操作上的问题是什么" id="toc-53-fb-在灵巧操作上的问题是什么">5.3 FB 在灵巧操作上的问题是什么</a></li>
+</ul></li>
+<li><a href="#6--相似词汇背后的不同接口" id="toc-6--相似词汇背后的不同接口">6 · 相似词汇背后的不同接口</a></li>
+<li><a href="#7--用什么证据判断实现与局限" id="toc-7--用什么证据判断实现与局限">7 · 用什么证据判断实现与局限</a></li>
+<li><a href="#8--温习与继续阅读" id="toc-8--温习与继续阅读">8 · 温习与继续阅读</a></li>
+</ul></details></nav><main><blockquote>
+<p>T2 / T3 共用路线 · 2026-10-17 · <a href="rl-control-review-primer.html">离线 HTML 阅读版</a> · <a href="rl-control-practice.md">分段实践</a> 先通读，再由陪练按已有能力选择短 session。主线是 RL 基础知识及其在连续控制、sim2real 中的含义；DexLab 只作具体案例，源码导读为可选深入。现行顺序与证据门槛见 <a href="../../curriculum.md#rl-基础讲义与课次的对应t2t3-共用">课表</a>。</p>
+</blockquote>
+<h2 id="0--三条路线两个分类维度">0 · 三条路线，两个分类维度</h2>
+<p><strong>On-policy / off-policy</strong> 问的是：训练目标中的 policy 与数据采集的 behavior policy 是什么关系？<strong>Zero-shot</strong> 问的是：遇到新任务时，还需要哪些数据、交互和参数更新？这两个维度可以交叉。FB 可以用 off-policy transitions 预训练，再对新 reward 做 zero-shot task inference。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>路线</th>
+<th>采什么数据</th>
+<th>学什么</th>
+<th>测试时怎样接新目标</th>
+<th>本课程中的落点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PPO</td>
+<td>当前 behavior policy 的新 rollout；一个 batch 内重复优化有限轮</td>
+<td>随机 policy 与 state value</td>
+<td>通常需要训练或预先定义的 goal conditioning；PPO 本身不提供任意新 reward 接口</td>
+<td>T2·S02–S06、T3·S01；DexLab Stage 1</td>
+</tr>
+<tr>
+<td>TD3</td>
+<td>带 exploration 的 behavior transitions，跨轮存入 replay</td>
+<td>双 Q、deterministic actor、target networks</td>
+<td>通常对指定 reward 优化；也可作为多任务学习组件</td>
+<td>T3·S02；接回 RLT / EXPO 的价值学习</td>
+</tr>
+<tr>
+<td>FB</td>
+<td>覆盖环境的 transitions；可在线采集，也可固定离线数据</td>
+<td>reward-independent successor representation 与 task-conditioned policy</td>
+<td>冻结网络，用新 reward 推断 task vector，再调用 policy</td>
+<td>T3·S09；原理见 SR / SF / FB 专题</td>
+</tr>
+</tbody>
+</table></div>
+<p>“Reward-free”不等于无损失、无训练、无采样成本；“off-policy”不等于“offline”。后者还规定训练期间不能继续收集环境交互。能消费 replay 的算法也不自动适合固定窄数据集：actor 仍可能追逐数据未覆盖动作上的虚高 Q。</p>
+<p>当前研究对象还需要第四层知识：<strong>simulation / control contract</strong>。环境的 action、observation、time step、reset 和 reward 决定 RL 实际学的 MDP。更换 controller 或删掉 privileged inputs，可能改变问题本身，而不仅是换一个网络。</p>
+<p>先读本讲义 §1–2 的共同接口，再接 §4 的 TD3 与<a href="rl-foundations-primer.html#4--连续动作的-off-policy-actor-critic">基础讲义 §4 的 SAC</a>。经典更新对拍后，按 <a href="rl-control-practice.md">P7/P8</a> 进入生成策略后训练或可微动力学。DexLab 和 FB 各有专题入口；已掌握的知识点只做一次上下文判读。</p>
+<p><strong>执行过程阅读法（2026-10-18 补充）。</strong> §2 在公式后补 REINFORCE、GAE 和 PPO 伪代码；TD(0)、SARSA/Q-learning、DQN、TD3/SAC 与 offline policy extraction 的流程见 <a href="rl-foundations-primer.html">RL 基础讲义</a>。先找“数据采集 → 固定目标 → 更新谁 → 何时重新采集”，再把公式放回对应的一行。这里的伪代码用于理解执行顺序，不代表已经完成实现或训练。</p>
+<h2 id="1--所有方法共享的控制闭环">1 · 所有方法共享的控制闭环</h2>
+<pre class="text"><code>物理状态 s_t → sensor / noise / history → observation o_t
+    ↑                                      ↓
+PhysX / dynamics ← PD / actuator / delay ← policy action a_t
+    └──────── next observation、reward、termination ────────┘</code></pre>
+<h3 id="11-stateobservation-与-history">1.1 State、observation 与 history</h3>
+<p><strong>State</strong> 需要包含决定未来的变量；<strong>observation</strong> 是 policy 实际拿到的信息。物体质量、摩擦、接触状态、执行器延迟和 target accumulator 可能影响未来，却不都直接可测。只给单帧 joint position 的 policy 面对的是 partial observability。History encoder 用过去的 observation / action 估计有用的信息；有限 history 不能保证恢复完整 Markov state。</p>
+<p><strong>Privileged information</strong> 是训练可见、部署不可见的信息。两种常见接线要分开：</p>
+<ol type="1">
+<li>Asymmetric actor-critic：actor 只看可部署输入，critic 多看 simulator state；部署直接去掉 critic。</li>
+<li>Privileged teacher → student：teacher actor 也使用 privileged inputs；必须训练替代输入的 student，并单独评估它。</li>
+</ol>
+<p>DexLab 的 HORA / AnyRotate Stage 1 属于第二种。不要仅根据类名中的 <code>asymmetric</code> 就判断只有 critic 看到了特权状态；以 forward 中的 tensor 拼接为准。具体证据见 <a href="../../references/dexlab-sim-rl-digest.md">DexLab 代码导读</a>。</p>
+<h3 id="12-action-不一定是-torque">1.2 Action 不一定是 torque</h3>
+<p>Policy 可以输出 torque、position target 或 target delta。若输出 delta，则 actuator 看到的是经过缩放、滤波、累积和限位后的 target；相同 action 在不同历史下会产生不同力矩。控制器状态必须在 reset 时恢复，policy / teacher / evaluator 的 action mapping 必须一致。</p>
+<p>以 H13 配置为例：policy 为 10 Hz，physics 为 120 Hz，13 个主动控制量表示 position target 的增量，经滤波、累积和 position PD 执行；mimic joints 与 delay 也参与最终动作。理解 action 的含义，要从 policy 输出一路连到 actuator。</p>
+<p><strong>时间单位影响算法含义。</strong> Control period 为 Δt 时，gamma 对应的有效折扣时长约为 <code>Δt / (1 - gamma)</code>，指数时间常数为 <code>-Δt / log(gamma)</code>。保持 gamma 不变而把 control rate 翻倍，会缩短真实时间尺度上的视野。Velocity reward、按时间累积的成本、episode timeout、history duration 都要一起核对。这些量共同定义了训练问题的时间尺度。</p>
+<p><strong>三个时间长度要分开。</strong> AnyRotate Stage 1 的 H13 示例使用 <code>gamma=0.99</code>、<code>Δt=0.1 s</code>，有效折扣视野约为 <code>0.1 / 0.01 = 10 s</code>；训练 episode 上限为 <code>60 s</code>。10 秒表示远期 reward 的权重衰减尺度，超过这个时间仍有贡献；60 秒决定一条 episode 最长能持续多久。还有一个长度是每次收集的 rollout：这里为 8 步，即 0.8 秒，见 §2.2。</p>
+<h3 id="13-terminationtruncation-与-reset">1.3 Termination、truncation 与 reset</h3>
+<p>Task terminal（例如定义为失败的掉落）一般不 bootstrap。外部 time limit 若只是截断一个 continuing task，应从 <strong>reset 前的 final observation</strong> bootstrap；如果 horizon 本来就是任务定义的一部分，则按任务 terminal 处理，必要时把剩余时间纳入 state。</p>
+<p>Vector environment 的 autoreset 容易把新 episode 的初始 observation 当作上一条 transition 的 next observation。无论 PPO 还是 TD3，都要先验证 wrapper 返回值与 final observation 的存放位置；字段名字不能替代语义核查。</p>
+<h2 id="2--ppo新-rollout-如何变成策略更新">2 · PPO：新 rollout 如何变成策略更新</h2>
+<h3 id="21-从-reinforce-到-actor-critic">2.1 从 REINFORCE 到 actor-critic</h3>
+<p>Policy gradient 用 <code>grad log pi(a|o) × advantage</code> 提高好动作的概率。Baseline 降低方差；在 actor loss 中，采集后计算好的 advantage 是固定训练目标，不让其梯度顺路更新 value 或改变权重的含义。</p>
+<p>Critic 拟合 return，actor 使用相对 baseline 的 advantage。Reward 更高不一定意味着 advantage 为正，因为 baseline 也可能更高。T2·S02/S03 分别练 score-function estimator 和 stop-gradient；这里把它们接到 rollout 更新流程。</p>
+<h4 id="执行过程--reinforce-加-learned-baseline">执行过程 · REINFORCE 加 learned baseline</h4>
+<p><strong>输入：</strong> 当前 policy 采到的完整 terminal episodes；外部 truncation 不能直接当作零尾部。<strong>更新：</strong> stochastic actor 与独立 V baseline。下面明确采用起始状态折扣目标 <code>J = E[sum gamma^t r_t]</code>，所以 actor 项保留 <code>gamma^t</code>；<code>r_t</code> 表示执行本步动作后得到的 reward。</p>
+<pre class="text"><code>repeat:
+    用当前 pi 收集一批完整 episodes；期间不更新参数
+    对每条 episode 从后往前算 G_t = r_t + gamma * G_(t+1)
+        # 真正 terminal 后的 G_T = 0；t 在每条 episode 内从 0 计
+    advantage_t = stopgrad(G_t - V(o_t))     # 在拟合 V 前固定
+    actor_loss = -mean_over_episodes(
+        sum_t gamma^t * advantage_t * log pi(a_t | o_t))
+    minimize actor_loss over pi             # a_t 是采集时保存的动作
+    minimize mean((V(o_t) - G_t)^2) over V
+    丢弃这一批 episodes，重新用更新后的 policy 采集</code></pre>
+<p>若不学 baseline，令 advantage 为 <code>G_t</code> 就得到 REINFORCE。A2C 将完整 MC return 换成短 rollout 的 bootstrapped return；下一节 GAE 进一步组织多步 TD residual。常见实现会采用省略显式 <code>gamma^t</code> 的 surrogate，须说明目标/采样权重约定；它与这里严格起始状态目标的写法有区别。</p>
+<h3 id="22-gae两个-mask各管一件事">2.2 GAE：两个 mask，各管一件事</h3>
+<p>设 <code>b_t</code> 表示该 transition 允许 bootstrap，<code>c_t</code> 表示下一条 advantage 仍属于同一条可继续的轨迹：</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>δ</mi><mi>t</mi></msub><mo>=</mo><msub><mi>r</mi><mi>t</mi></msub><mo>+</mo><mi>γ</mi><msub><mi>b</mi><mi>t</mi></msub><msub><mi>V</mi><mrow><mi>o</mi><mi>l</mi><mi>d</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><msubsup><mi>o</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow><mrow><mi>f</mi><mi>i</mi><mi>n</mi><mi>a</mi><mi>l</mi></mrow></msubsup><mo stretchy="false" form="postfix">)</mo><mo>−</mo><msub><mi>V</mi><mrow><mi>o</mi><mi>l</mi><mi>d</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>o</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\delta_t = r_t + \gamma b_t V_{old}(o_{t+1}^{final}) - V_{old}(o_t)</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>A</mi><mo accent="true">̂</mo></mover><mi>t</mi></msub><mo>=</mo><msub><mi>δ</mi><mi>t</mi></msub><mo>+</mo><mi>γ</mi><mi>λ</mi><msub><mi>c</mi><mi>t</mi></msub><msub><mover><mi>A</mi><mo accent="true">̂</mo></mover><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>,</mo><mspace width="2.0em"></mspace><msub><mover><mi>R</mi><mo accent="true">̂</mo></mover><mi>t</mi></msub><mo>=</mo><msub><mover><mi>A</mi><mo accent="true">̂</mo></mover><mi>t</mi></msub><mo>+</mo><msub><mi>V</mi><mrow><mi>o</mi><mi>l</mi><mi>d</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>o</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">\hat A_t = \delta_t + \gamma\lambda c_t\hat A_{t+1},\qquad \hat R_t=\hat A_t+V_{old}(o_t).</annotation></semantics></math></p>
+<p>Continuing task 的 time-limit truncation 可以有 <code>b_t=1, c_t=0</code>：需要 final-state value，但不能把 reset 后新 episode 的 advantage 接过来。真正 terminal 两者为 0。普通 batch 末尾可以 bootstrap，递推在已有 buffer 边界结束。若实现用 reward correction 或别的等价写法，仍应对拍这两种语义。</p>
+<p>Lambda 控制多步 TD 误差的累积：小 lambda 更依赖 critic，大 lambda 使用更长的 sampled credit assignment。比较时固定 rollout、value prediction 和其余参数，先区分 estimator 变化，再谈学习曲线。</p>
+<p><strong>用 8 步 rollout 理解 bootstrap。</strong> 这个示例的 <code>horizon_length=8</code>：每个 env 每批收集 0.8 秒数据，再构造 GAE。若中途没有 terminal，buffer 最前面的样本最多用到 8 步实测 reward，最后一个样本只用到 1 步；更远的影响由 critic value 补上。<code>lambda=1</code> 时可直接看成相应的 n-step return；此配置 <code>tau=0.95</code> 对应 GAE lambda，实际是这些多步估计的加权组合。最长 8 步项的尾部系数仍有 <code>gamma^8≈0.923</code>，所以短 rollout 下 critic 的准确性尤其重要；这个系数不是 critic 占整个 target 的百分比。增加并行 env 数会增加样本数，而每条轨迹的实测时间长度仍是 0.8 秒。</p>
+<h4 id="执行过程--gae-的倒序递推">执行过程 · GAE 的倒序递推</h4>
+<p><strong>输入：</strong> 长度 T 的 rollout，以及采样时冻结的 <code>old_value[t]</code>、<code>next_value[t]</code>。后者评价该 transition <strong>reset 前</strong>的下一 observation；terminal 的 value 可直接置 0。<strong>输出：</strong> 固定的 advantage 与 value target，本阶段不更新网络。</p>
+<pre class="text"><code>next_advantage = 0
+for t = T-1, ..., 0:
+    delta = r[t] + gamma * b[t] * next_value[t] - old_value[t]
+    advantage[t] = delta + gamma * lambda * c[t] * next_advantage
+    value_target[t] = advantage[t] + old_value[t]
+    next_advantage = advantage[t]
+advantage, value_target = stopgrad(advantage, value_target)</code></pre>
+<p>真正 terminal 用 <code>b=0, c=0</code>；continuing-task timeout 用 <code>b=1, c=0</code>；普通相邻 transition 用 <code>b=1, c=1</code>。Buffer 末尾的 <code>next_advantage=0</code> 结束递推，但该步仍可通过 <code>next_value</code> bootstrap。倒序是为了读取已算好的下一项 advantage，环境交互依然正序发生。</p>
+<h3 id="23-ratio-与-clipping">2.3 Ratio 与 clipping</h3>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>θ</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mrow><mi>exp</mi><mo>&#8289;</mo></mrow><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><mrow><mi>log</mi><mo>&#8289;</mo></mrow><msub><mi>π</mi><mi>θ</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">|</mo><msub><mi>o</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mrow><mi>log</mi><mo>&#8289;</mo></mrow><msub><mi>π</mi><mrow><mi>o</mi><mi>l</mi><mi>d</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">|</mo><msub><mi>o</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">r_t(\theta)=\exp\big(\log\pi_\theta(a_t|o_t)-\log\pi_{old}(a_t|o_t)\big)</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>L</mi><mrow><mi>c</mi><mi>l</mi><mi>i</mi><mi>p</mi></mrow></msup><mo>=</mo><mi>𝔼</mi><mrow><mo stretchy="true" form="prefix">[</mo><mi>min</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>r</mi><mi>t</mi></msub><msub><mover><mi>A</mi><mo accent="true">̂</mo></mover><mi>t</mi></msub><mo>,</mo><mi>clip</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>r</mi><mi>t</mi></msub><mo>,</mo><mn>1</mn><mo>−</mo><mi>ϵ</mi><mo>,</mo><mn>1</mn><mo>+</mo><mi>ϵ</mi><mo stretchy="false" form="postfix">)</mo><msub><mover><mi>A</mi><mo accent="true">̂</mo></mover><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">]</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">L^{clip}=\mathbb E\left[\min\left(r_t\hat A_t,\operatorname{clip}(r_t,1-\epsilon,1+\epsilon)\hat A_t\right)\right].</annotation></semantics></math></p>
+<p>Actor 最大化这个 surrogate，代码通常最小化其负数，再加 value loss 与 entropy 项。<code>old_log_prob</code>、old values 和 advantage 必须固定在采样/目标构建时；每个 minibatch 重算 old log probability 会让 ratio 失去意义。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>固定 advantage</th>
+<th>超过哪边后，surrogate 停止继续奖励有利变化</th>
+<th>另一边为什么仍需有梯度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A &gt; 0</td>
+<td>ratio &gt; 1 + epsilon</td>
+<td>好动作概率被过度压低时，需要纠正</td>
+</tr>
+<tr>
+<td>A &lt; 0</td>
+<td>ratio &lt; 1 - epsilon</td>
+<td>坏动作概率被过度抬高时，需要纠正</td>
+</tr>
+</tbody>
+</table></div>
+<p>Clipping 不强制 policy 落在 KL ball 内，也不是把所有样本的 ratio 数值硬截断。多个 epochs 仍会产生 policy drift；因此监测 approximate KL、clip fraction、entropy 和实际 return。一个 rollout 多次 minibatch 更新仍属于 PPO 的常见 on-policy 工作方式，不意味着可以无限混入旧 replay。</p>
+<h3 id="24-连续动作与可执行-policy">2.4 连续动作与可执行 policy</h3>
+<p>Diagonal Gaussian 的 log probability 要沿 action dimensions 求和。使用 tanh squashing 时，通过变量变换的 Jacobian 计算变换后动作的 density。使用 raw Gaussian sample 后由环境 clamp 时，保存 raw sample 及其 log probability，并把 clamp 视为执行映射；executed action 另行记录。这样 rollout 中的采样事件、更新时的 likelihood 和实际执行动作都有明确对应。</p>
+<p>Observation normalization、action scale、network weights、history/reset 逻辑共同构成部署 policy。把这些内容一起保存，并在 evaluation 恢复，才能复现采集时的行为。动作采样、映射和记录方式是连续控制实现的基础接口。</p>
+<p><strong>一次完整 PPO 更新：</strong> 冻结 behavior snapshot → 收集 rollout → 正确构建 bootstrap / GAE / return → 有限次 minibatch 更新 → 检查 drift 与独立 rollout → 丢弃该批数据并重新采集。<a href="https://arxiv.org/abs/1707.06347">PPO 原论文</a>与 <a href="https://spinningup.openai.com/en/latest/algorithms/ppo.html">Spinning Up 实现说明</a>给出目标与流程。</p>
+<h4 id="执行过程--ppo-的完整外循环">执行过程 · PPO 的完整外循环</h4>
+<p><strong>初始化：</strong> policy <code>pi</code>、独立 value network V；学习率、clip epsilon、每批 rollout 大小与最大 epochs 事先固定。<strong>动作约定：</strong> buffer 保存实际采样的 <code>a_sample</code> 与相应 density；通过 <code>action_map</code> 执行，raw Gaussian clipping / tanh density 按 §2.4 选择并保持一致。</p>
+<pre class="text"><code>repeat:
+    pi_old, V_old = 冻结当前网络的快照
+    buffer = 用 pi_old 收集一批新的 rollout
+        # 每步存 o, a_sample, old_logp, r, old_value, next_value, b, c
+        # old_logp = log pi_old(a_sample | o)；next_value 不读 reset observation
+    buffer.advantage, buffer.value_target = GAE(buffer)
+        # 仅计算一次，固定后随原 transition 一起抽 minibatch
+
+    for epoch = 1, ..., max_epochs:
+        for batch in shuffled_minibatches(buffer):
+            logp = log pi(batch.a_sample | batch.o)
+            ratio = exp(logp - batch.old_logp)
+            unclipped = ratio * batch.advantage
+            clipped = clip(ratio, 1-epsilon, 1+epsilon) * batch.advantage
+            minimize -mean(min(unclipped, clipped)) over pi
+            minimize mean((V(batch.o) - batch.value_target)^2) over V
+        if 测得的 policy KL 超过预设停止阈值:
+            break                         # 提前结束本批的多轮优化
+    独立评测、记录 KL / clip fraction / return
+    丢弃 buffer，用新的 policy 重新采集</code></pre>
+<p>这里保留 actor clip 与 value regression 两个核心目标；entropy bonus、value clipping、advantage normalization 等实现选择需单列。固定的是采集时的 action、old log probability、advantage 与 value target；每个 minibatch 都重算的是当前 policy 的 <code>logp</code>。流程与 <a href="https://spinningup.openai.com/en/latest/algorithms/ppo.html#pseudocode">Spinning Up PPO 伪代码</a>对照，timeout 与动作记录额外按本讲义的接口约定展开。</p>
+<h2 id="3--dexlabppo-teacher-后面还有什么">3 · DexLab：PPO teacher 后面还有什么</h2>
+<h3 id="31-framework-复用的边界">3.1 Framework 复用的边界</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>层</th>
+<th>承担职责</th>
+<th>阅读时的重点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Isaac Sim / PhysX</td>
+<td>刚体、接触、仿真 stepping</td>
+<td>timestep、接触材料、solver 与真实执行器误差</td>
+</tr>
+<tr>
+<td>IsaacLab</td>
+<td>DirectRLEnv lifecycle、scene、vector env 接口</td>
+<td>step / reset / observation / reward 的调用与返回约定</td>
+</tr>
+<tr>
+<td>rl_games</td>
+<td>Stage 1 PPO rollout / optimization 框架</td>
+<td>配置如何进入 PPO，tensor 与 normalization 如何接入</td>
+</tr>
+<tr>
+<td>DexLab</td>
+<td>task、controller、sensor、DR、curriculum、teacher/student、bank 与 evaluation</td>
+<td>被学习的任务是什么，训练信号能否部署</td>
+</tr>
+</tbody>
+</table></div>
+<p>框架负责通用训练与仿真循环，研究实现定义具体任务及其部署条件。Reward 和 contact 语义、控制标定、history、随机化、蒸馏分布与独立评估，都能显著改变训练结果。温习时先掌握这几层职责，再按需要阅读对应代码。</p>
+<h3 id="32-hora-与-anyrotate-的两阶段接线">3.2 HORA 与 AnyRotate 的两阶段接线</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>HORA 路线（所读版本）</th>
+<th>AnyRotate / H13 路线（所读配置）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stage 1</td>
+<td>privileged encoder + proprioception 进入 actor/value；PPO 优化旋转行为</td>
+<td>增加 tactile、command axis、物体状态等接口；PPO teacher</td>
+</tr>
+<tr>
+<td>Stage 2</td>
+<td>history encoder 拟合 teacher latent，冻结其他网络；student action 采集后续状态</td>
+<td>history student；latent/action 蒸馏，配置允许训练 actor；rollout 有 teacher mixing</td>
+</tr>
+<tr>
+<td>部署检查</td>
+<td>history 能否补足 teacher 使用的隐藏信息</td>
+<td>纯 student 是否在新的接触、形状和轴向下稳定</td>
+</tr>
+</tbody>
+</table></div>
+<p>Stage 2 的默认训练信号是 supervised distillation；其中 optimizer 使用的监督目标决定了更新性质。AnyRotate 的 replay 与 finetune 是另外的可选路径，具体实验由所选配置决定。</p>
+<p><strong>Teacher mixing</strong> 改变 student 训练时访问的 state distribution。训练 return 包含 teacher 纠正的贡献，纯 student 能力通过独立 rollout 衡量。Latent MSE 描述表示误差，而 closed-loop performance 还取决于误差方向、actor sensitivity 与 history distribution。</p>
+<p>H13 这个 student rollout 执行均值动作 <code>student_mu</code>，没有额外从 action distribution 采样。动作层的随机性来自 teacher/student 来源选择；reset、domain randomization、扰动与观测噪声仍可使访问到的状态多样化。<strong>Deterministic action selection 与 deterministic trajectory 是两件事。</strong></p>
+<p>读指标时同时看样本数：这个配置持续保留 teacher mixing，训练日志中用于纯 student 统计的 episode 集合始终为空，因此 <code>student_episode_reward=0.0</code> 且 <code>student_episode_count=0</code>。这里的 0 是“尚无该类评测样本”的占位值；实际能力需要另跑纯 student evaluation。具体过滤规则留在可选导读中。</p>
+<h3 id="33-sim2real-的三个接口">3.3 Sim2real 的三个接口</h3>
+<ol type="1">
+<li><strong>Dynamics / sensing</strong>：system identification 校准执行器、延迟与触觉；DR 覆盖不确定性。范围更宽未必更好，错误的随机化关系可能制造不真实任务。</li>
+<li><strong>Training distribution</strong>：grasp bank 决定起点，object sampling 决定物体权重，curriculum 逐步改变重力或成功要求。这些都会改变训练难度与日志的含义。</li>
+<li><strong>Deployment / evaluation</strong>：固定 normalization、history、controller 和时间尺度；按物体、旋转轴、失败类型报告纯 student 表现，再讨论真实硬件迁移。</li>
+</ol>
+<p>Bank 恢复包括 joint targets / preload 等 controller state，这样相同 pose 才有可比较的后续响应。Nominal bank replay 验证给定条件下的初始化；DR robustness 另用多种参数条件评估。Teacher 的仿真成绩、student 的仿真成绩和真机成绩分别记录。</p>
+<p>需要追踪实现时再读 <a href="../../references/dexlab-sim-rl-digest.md">DexLab digest</a>。完成本章基础温习只需解释信息流、训练信号和评测对象；源码导读补充固定版本的实现证据。</p>
+<h2 id="4--td3用旧数据学习可改进策略的-q">4 · TD3：用旧数据学习可改进策略的 Q</h2>
+<h3 id="41-一个-batch-的计算图">4.1 一个 batch 的计算图</h3>
+<p>Replay 保存 <code>(s, a_executed, r, s_next, bootstrap_mask)</code> 及所需 history。Actor 输出的 proposal 与环境执行动作若不同，要先明确 Q 的 action space；不允许把一个动作的后果随意标成另一个动作的 transition。</p>
+<p>TD3 对下一个动作加 clipped smoothing noise，并限制到合法 action range：</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mover><mi>a</mi><mo accent="true">̃</mo></mover><mo>′</mo></msup><mo>=</mo><mrow><mi>clip</mi><mo>&#8289;</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><mover><mi>θ</mi><mo accent="true">‾</mo></mover></msub><mo stretchy="false" form="prefix">(</mo><msup><mi>s</mi><mo>′</mo></msup><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>clip</mi><mo stretchy="false" form="prefix">(</mo><mi>ϵ</mi><mo>,</mo><mi>−</mi><mi>c</mi><mo>,</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><msub><mi>a</mi><mrow><mi>m</mi><mi>i</mi><mi>n</mi></mrow></msub><mo>,</mo><msub><mi>a</mi><mrow><mi>m</mi><mi>a</mi><mi>x</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="1.0em"></mspace><mi>ϵ</mi><mo>∼</mo><mi>𝒩</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">\tilde a&#39;=\operatorname{clip}\left(\mu_{\bar\theta}(s&#39;)+\operatorname{clip}(\epsilon,-c,c),a_{min},a_{max}\right),\quad \epsilon\sim\mathcal N(0,\sigma^2).</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mrow><mi>stopgrad</mi><mo>&#8289;</mo></mrow><mrow><mo stretchy="true" form="prefix">[</mo><mi>r</mi><mo>+</mo><mi>γ</mi><mi>b</mi><munder><mi>min</mi><mrow><mi>i</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>2</mn></mrow></munder><msub><mi>Q</mi><msub><mover><mi>ϕ</mi><mo accent="true">‾</mo></mover><mi>i</mi></msub></msub><mo stretchy="false" form="prefix">(</mo><msup><mi>s</mi><mo>′</mo></msup><mo>,</mo><msup><mover><mi>a</mi><mo accent="true">̃</mo></mover><mo>′</mo></msup><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">]</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>L</mi><msub><mi>Q</mi><mi>i</mi></msub></msub><mo>=</mo><mi>𝔼</mi><mo stretchy="false" form="prefix">[</mo><mo stretchy="false" form="prefix">(</mo><msub><mi>Q</mi><msub><mi>ϕ</mi><mi>i</mi></msub></msub><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>,</mo><mi>a</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>y</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo stretchy="false" form="postfix">]</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">y=\operatorname{stopgrad}\left[r+\gamma b\min_{i=1,2}Q_{\bar\phi_i}(s&#39;,\tilde a&#39;)\right],\qquad L_{Q_i}=\mathbb E[(Q_{\phi_i}(s,a)-y)^2].</annotation></semantics></math></p>
+<p>Actor 每隔若干 critic updates 更新一次，最小化 <code>-mean Q1(s, mu(s))</code>。Actor step 时固定 Q 的参数，但保留 <strong>Q 对 action 的导数</strong>，否则 actor 接收不到改进方向。Target networks 使用 Polyak averaging；target 不反向传播。<a href="https://arxiv.org/abs/1802.09477">TD3 原论文</a>与 <a href="https://spinningup.openai.com/en/latest/algorithms/td3.html">Spinning Up</a>是实现对照。</p>
+<h3 id="42-三项机制为何组合">4.2 三项机制为何组合</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>机制</th>
+<th>针对的风险</th>
+<th>不保证什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Twin critics + target min</td>
+<td>actor / bootstrap 放大乐观估计</td>
+<td>两个相关的 critic 仍可能一起高估，也可能过于保守</td>
+</tr>
+<tr>
+<td>Delayed actor update</td>
+<td>critic 尚不可靠时 actor 快速追逐错误</td>
+<td>不保证 critic 有足够数据支持</td>
+</tr>
+<tr>
+<td>Target policy smoothing</td>
+<td>对狭窄 Q 峰的利用</td>
+<td>不替代 behavior exploration noise；不是 SAC entropy objective</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Update-to-data ratio (UTD)</strong> 必须声明分母：每条新 transition 对应多少 optimizer updates，还是每次 vector step 对应多少次。Replay reuse 改善采样效率，也可能反复强化偏差。两条曲线应同时画 <code>environment transitions</code> 与 <code>optimizer updates / wall time</code>，否则不能判断“更快”。</p>
+<p>SAC 是对照路线：stochastic actor 与 entropy-regularized objective；不能把 TD3 的 exploration noise 当作 SAC 的温度 alpha。REDQ 与 EXPO 的 critic ensemble 也不等同于 TD3 两个 critics 的全部设计。基础细节接 <a href="rl-foundations-primer.html">原讲义知识点 13–17</a>。</p>
+<h3 id="43-为什么接到-rlt--expo-后更难">4.3 为什么接到 RLT / EXPO 后更难</h3>
+<p>Q 的输入 action 可能是 residual、token、candidate selection 或 edit，而物理环境执行的是完整动作序列。需要追踪 <code>learned action → executor → executed action → transition</code> 的身份。若一步执行 K 个 primitive steps，则 semi-MDP target 通常使用相应累计 reward 和 <code>gamma^K</code>；episode 中途结束时按实际执行长度处理。</p>
+<p>这条线只解释接口，具体 EXPO / RLT 机制及真实问题继续使用 <a href="s06-primer.html">S06</a>、<a href="actor-critic-foundations.md">actor-critic 基础衔接</a>和 <a href="expo-ft-casebook.html">EXPO-FT 案例集</a>，不另造一份实验结论。</p>
+<h2 id="5--fb把训练阶段的表示用于新-reward">5 · FB：把训练阶段的表示用于新 reward</h2>
+<h3 id="51-从标量-value-到-successor-measure">5.1 从标量 value 到 successor measure</h3>
+<p>SR 记录固定 policy 的未来访问，SF 记录未来 feature 累积。换 reward 可以重新评价这些行为；固定 policy 的 evaluation 本身不会自动产生最优控制。GPI 在已有 policy 的 action values 之间改进，FB 再把表示与 task-conditioned policy 联合学习。</p>
+<p>沿用 S09 的 <strong>next-state reward</strong> 约定，令 <code>Q_r(s,a)=E[sum_{t&gt;=0} gamma^t r(s_{t+1})]</code>。FB 用相对于 reference distribution rho 的 density 分解 successor measure：</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>M</mi><msub><mi>π</mi><mi>z</mi></msub></msup><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>,</mo><mi>a</mi><mo>,</mo><mi>d</mi><msup><mi>s</mi><mo>+</mo></msup><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mi>F</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>,</mo><mi>a</mi><mo>,</mo><mi>z</mi><msup><mo stretchy="false" form="postfix">)</mo><mi>⊤</mi></msup><mi>B</mi><mo stretchy="false" form="prefix">(</mo><msup><mi>s</mi><mo>+</mo></msup><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>ρ</mi><mo stretchy="false" form="prefix">(</mo><mi>d</mi><msup><mi>s</mi><mo>+</mo></msup><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">M^{\pi_z}(s,a,ds^+)\approx F(s,a,z)^\top B(s^+)\,\rho(ds^+).</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>z</mi><mi>r</mi></msub><mo>=</mo><msub><mi>𝔼</mi><mrow><mi>s</mi><mo>∼</mo><mi>ρ</mi></mrow></msub><mo stretchy="false" form="prefix">[</mo><mi>B</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mi>r</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">]</mo><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>Q</mi><mi>r</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>,</mo><mi>a</mi><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mi>F</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>,</mo><mi>a</mi><mo>,</mo><msub><mi>z</mi><mi>r</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mi>⊤</mi></msup><msub><mi>z</mi><mi>r</mi></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">z_r=\mathbb E_{s\sim\rho}[B(s)r(s)],\qquad Q_r(s,a)\approx F(s,a,z_r)^\top z_r.</annotation></semantics></math></p>
+<p>F 表达给定 task-conditioned policy 下的未来占用；B 给访问目标 state 的坐标。它们不是 forward dynamics / backward physics。要得到控制能力，还需要 policy 对 <code>F(s,a,z)^T z</code> 的改进与表示学习保持自洽。连续 action 的 actor 近似 greedy，不等于求到了精确 argmax。</p>
+<h3 id="52-哪些东西训练哪些东西测试时冻结">5.2 哪些东西训练，哪些东西测试时冻结</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>允许的操作</th>
+<th>应登记的成本与边界</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pretraining</td>
+<td>采集/读取 transitions，采样 z，更新 F/B/policy/targets</td>
+<td>数据来源、coverage、表示维数、更新预算</td>
+</tr>
+<tr>
+<td>Task inference</td>
+<td>在同一 rho 的 reference samples 上评价新 reward，估计 z_r</td>
+<td>reward evaluations 数量、采样分布、是否额外访问环境</td>
+</tr>
+<tr>
+<td>Execution</td>
+<td>冻结网络，以 z_r 调用 policy</td>
+<td>test tasks、rollout 数、task return；不拿结果继续调参</td>
+</tr>
+</tbody>
+</table></div>
+<p>沿用 S09 与 2023 论文的定义，按任务怎样给出区分：</p>
+<ul>
+<li><strong>Zero-shot</strong>：显式给出 reward function，用已有 reference states 评价它并计算 z；随后直接执行，无额外 planning / learning。用有限 reference samples 近似积分，仍可属于这种任务指定方式。</li>
+<li><strong>Few-shot task specification / zero-planning</strong>：任务仅由少量 <code>(state, reward)</code> 样本给出，通过这些样本估计 z，再直接执行。</li>
+<li><strong>Adaptation</strong>：额外用环境 rollout 搜索 z，或更新网络参数；单列交互、搜索与优化成本。</li>
+</ul>
+<p>共同点是利用预训练知识；区分点是 reward 的提供方式与测试时允许的操作。仅仅冻结网络，还不足以区分这三者。<a href="https://arxiv.org/html/2209.14935v2#S2">定义：2023 §2</a></p>
+<p>Rho 不是无关符号：训练 density 的 reference measure 与推断 z 的积分必须一致。<code>C_B=E_rho[B B^T]</code> 是<strong>未中心化二阶矩</strong>；在给定 B 的最小二乘 reward projection 中可出现 <code>C_B^-1</code>。它不应被随意插入标准 FB task encoding <code>z_r=E[B r]</code>，否则改变坐标约定。完整推导与数值例见 <a href="zero-shot-rl-primer.html">Zero-Shot 讲义 §3</a>。</p>
+<h3 id="53-fb-在灵巧操作上的问题是什么">5.3 FB 在灵巧操作上的问题是什么</h3>
+<p>Contact-rich control 的可达状态可能狭窄且不连通；训练集未覆盖的重抓取或掉落恢复，不会仅靠换 z 出现。Finite-rank representation 未必区分新 reward 所需的接触细节。History 与 hidden dynamics 还影响 successor measure 对应的是哪个状态定义。</p>
+<p>因此要分开问：<strong>同一 dynamics 的新 reward 能否零样本调用？新的物体 / 摩擦 / 硬件下能否迁移？</strong> 后者需要额外的 coverage、conditioning、DR 或 adaptation 证据。FB 不自动替代 HORA 的 dynamics adaptation，也不直接替代触觉与 controller 校准。核心来源：<a href="https://arxiv.org/abs/2103.07945">FB 2021</a>、<a href="https://arxiv.org/abs/2209.14935">Zero-Shot RL 2023</a>。</p>
+<h2 id="6--相似词汇背后的不同接口">6 · 相似词汇背后的不同接口</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>名字</th>
+<th>编码什么 / 怎样获得</th>
+<th>直接影响什么</th>
+<th>如何验证</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HORA adaptation latent</td>
+<td>history 推断 teacher 的 privileged latent</td>
+<td>policy 对隐藏环境因素的响应</td>
+<td>student-only rollout、latent error 与动作/失败的关系</td>
+</tr>
+<tr>
+<td>AnyRotate command axis</td>
+<td>明确输入的期望旋转方向</td>
+<td>goal-conditioned 行为</td>
+<td>各轴 holdout、真实旋转进展</td>
+</tr>
+<tr>
+<td>FB task vector z</td>
+<td>reference states 上的 reward-weighted B 平均</td>
+<td>用既有表示调用新 reward 的 policy</td>
+<td>冻结权重、未见 reward、task return</td>
+</tr>
+<tr>
+<td>RLT / EXPO learned interface</td>
+<td>token、residual、selection 或 edit，依方法定义</td>
+<td>frozen executor 实际执行的动作</td>
+<td>action identity、Q ranking 与真实闭环结果</td>
+</tr>
+</tbody>
+</table></div>
+<p>“用了 latent”无法说明它们等价。先写明 latent 的 producer、consumer、训练信号、是否跨部署边界，再讨论迁移。也不要混淆 Successor Representation 与 success rate 的缩写 SR；本路线写全 Successor Representation，指标写 <code>success_rate</code>。</p>
+<h2 id="7--用什么证据判断实现与局限">7 · 用什么证据判断实现与局限</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>看到的现象</th>
+<th>至少两种解释</th>
+<th>区分它们的检查</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PPO reward 上升，旋转能力没上升</td>
+<td>shaping 被利用；curriculum / object mix 改变</td>
+<td>固定评测条件，分别报告真实 turns、掉落与各 reward 项</td>
+</tr>
+<tr>
+<td>Student latent loss 下降，纯 student 变差</td>
+<td>supervision 分布过窄；actor 对误差敏感</td>
+<td>相同状态上 latent/action 误差，再做 teacher-only / student-only 对照</td>
+</tr>
+<tr>
+<td>TD3 Q 上升，return 下降</td>
+<td>Q 外推偏差；action / reward 接线错误</td>
+<td>固定动作序列短程对拍、held-out rollout return 与 Q 校准；别只加 critics</td>
+</tr>
+<tr>
+<td>FB TD loss 下降，新任务差</td>
+<td>coverage / rank 不足；task inference 或 policy 近似错误</td>
+<td>固定网络、任务与初始状态分布，对比直接推断 z_r 和有限预算搜索 z 的独立评测表现</td>
+</tr>
+<tr>
+<td>仿真成功，真机掉落</td>
+<td>dynamics / tactile mismatch；reset 与 controller state 不一致</td>
+<td>先校验同一控制命令与感知接口，再定位学习侧问题</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>FB 检查的解释边界。</strong> 小型有限 MDP 可以用 exact oracle 对拍。真实控制任务可以冻结表示与 policy，用 Cross-Entropy Method（CEM）等方法搜索 z，再在未参与搜索的初始状态 / seeds 上评测。若搜索得到的 z 稳定更好，说明现有 conditional policy 已包含更好的行为，直接 task inference 尚有改进空间；原因还可来自表示近似、reward 积分误差等。若搜索未找到改进，表示、policy、coverage 以及搜索预算或算法本身都仍是候选原因。搜索后的成绩属于 adaptation，和直接推断的成绩分别报告；成本包括新增 rollout。相关扩展见 <a href="zero-shot-rl-primer.html">S09 §6–8</a>。</p>
+<p>这些是用于区分原因的检查。实现定义计算过程，独立评估提供能力证据；先明确各项证据能回答的问题，再选择下一步干预。</p>
+<h2 id="8--温习与继续阅读">8 · 温习与继续阅读</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>本次想补的缺口</th>
+<th>主材料</th>
+<th>实践入口</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PPO 与连续动作训练闭环</td>
+<td>本讲义 §1–2；T2 原路线</td>
+<td><a href="rl-control-practice.md">练习 P1–P2</a></td>
+</tr>
+<tr>
+<td>HORA / AnyRotate 的工程与部署边界</td>
+<td>§3 + <a href="../../references/dexlab-sim-rl-digest.md">DexLab digest</a>；<a href="https://haozhi.io/hora/">HORA</a>、<a href="https://maxyang27896.github.io/anyrotate/">AnyRotate</a>原项目</td>
+<td>P3、P6</td>
+</tr>
+<tr>
+<td>TD3 / SAC 更新与价值学习诊断</td>
+<td>§4 + <a href="rl-foundations-primer.html">基础讲义</a></td>
+<td>P4 的 replay 闭环与 SAC 固定 batch 对拍；可用已有正式复现证据替代同目标的 toy</td>
+</tr>
+<tr>
+<td>FB 基础和泛化边界</td>
+<td>§5 + <a href="zero-shot-rl-primer.html">Zero-Shot 专题</a></td>
+<td>P5；继续 <a href="s09-zero-shot-rl.md">S09 八单元</a></td>
+</tr>
+<tr>
+<td>形成当前项目的判断</td>
+<td>§6–7 + 已有正式 reports</td>
+<td>P6 的一页 comparison / failure card</td>
+</tr>
+</tbody>
+</table></div>
+<p>本路线是跨课的复习入口，不增加 Lesson。练习单给完整设计、learner-owned core 与 verifier；读完材料或看过参考演示都不自动获得 Pass。</p><footer>Markdown 是编辑源稿；本文件由 tools/build_reading_edition.py 生成。公式使用原生 MathML，图为内嵌 SVG，不依赖网络脚本。外链材料需联网，仓库内链接需保留相对目录。</footer></main></div></body></html>

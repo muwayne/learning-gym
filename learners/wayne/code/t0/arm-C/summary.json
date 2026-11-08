@@ -1,0 +1,32 @@
+{
+  "arm": "C",
+  "config": {
+    "seed": 20260829,
+    "arch": "3-16-16-16-1",
+    "act": "tanh",
+    "opt": "adam",
+    "lr": 0.001,
+    "batch": 256,
+    "steps": 5000,
+    "note": "C 数据偏食: train 重抽为 90% stable / 10% unstable（选项 c）"
+  },
+  "n_params": 625,
+  "final_loss_last100": 0.14714792251586914,
+  "recall_unstable": 0.45,
+  "recall_stable": 0.94,
+  "recall_gap_pp": 48.99999999999999,
+  "mid_mass_0p2_0p8": 0.396,
+  "saturated_mass": 0.526,
+  "grad_norm_last100_mean": {
+    "layer1": 0.1314709946513176,
+    "layer2": 0.1742520385235548,
+    "layer3": 0.08434964664280414,
+    "layer4": 0.043035548347979784
+  },
+  "param_max_abs_delta": {
+    "layer1": 0.7267890572547913,
+    "layer2": 1.0968213081359863,
+    "layer3": 1.1854181289672852,
+    "layer4": 0.9689143300056458
+  }
+}

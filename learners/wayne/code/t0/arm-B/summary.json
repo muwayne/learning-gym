@@ -1,0 +1,32 @@
+{
+  "arm": "B",
+  "config": {
+    "seed": 20260829,
+    "arch": "3-16-16-16-1",
+    "act": "tanh",
+    "opt": "adam",
+    "lr": 0.001,
+    "batch": 256,
+    "steps": 5000,
+    "note": "B 单位灾难: force raw x1000 & no standardization (col 0)"
+  },
+  "n_params": 625,
+  "final_loss_last100": 0.6931288355588913,
+  "recall_unstable": 0.0,
+  "recall_stable": 1.0,
+  "recall_gap_pp": 100.0,
+  "mid_mass_0p2_0p8": 1.0,
+  "saturated_mass": 0.0,
+  "grad_norm_last100_mean": {
+    "layer1": 2.8298685939227574e-05,
+    "layer2": 0.0009838427077556843,
+    "layer3": 0.008371669395710341,
+    "layer4": 0.0239844984683441
+  },
+  "param_max_abs_delta": {
+    "layer1": 0.8005766868591309,
+    "layer2": 0.10525994002819061,
+    "layer3": 0.14728912711143494,
+    "layer4": 0.2248399257659912
+  }
+}

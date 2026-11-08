@@ -1,0 +1,3 @@
+<section class="function-demo s6-demo" aria-label="backup identity 交互示例"><h4>交互示例 · backup 用谁，Q 就是谁的价值</h4><p>同一个 next state s'，TD target 里的 <code>Q(s', a')</code> 取决于 a' 怎么来。下面是四种 a' 的真实期望成功概率（Monte Carlo，2000 次）。滑块与上一个示例共用，调整后这里自动更新。</p>
+<svg id="s6-bars" viewBox="0 0 720 220" role="img" aria-label="四种 backup 的价值"></svg>
+<p class="demo-note">第一根与第三根的差距是"估的是谁"的差别，不是误差；第三根与第二根的差距才是 critic 排序不准造成的损失；第四根是全动作空间最优，连续动作里用 learned Q 逼近它会外推到没见过的动作。</p></section>

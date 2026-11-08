@@ -1,0 +1,10 @@
+<section class="function-demo s6-demo" aria-label="maximization bias 交互示例"><h4>交互示例 · 在带噪声的估计里取最大</h4><p>N 个候选动作。情形 A：真实价值全是 0.5；情形 B：其中一个真实价值 0.6，其余 0.5。critic 对每个候选的估计 = 真实价值 + 噪声（标准差 σ）。比较三种做法下，"被选中候选的估计值 − 它的真实值"（高估量）随 N 的变化。每个点是 4000 次 Monte Carlo 的平均。</p>
+<div class="s6-ctls">
+<div class="s6-ctl"><label for="mb-sigma">估计噪声 σ<output id="mb-v-sigma"></output></label><input type="range" id="mb-sigma" min="0.02" max="0.3" step="0.01" value="0.1"></div>
+<div class="s6-ctl"><label for="mb-case">情形</label><select id="mb-case"><option value="A">A：全部 0.5</option><option value="B">B：一个 0.6，其余 0.5</option></select></div>
+<div class="s6-ctl"><label for="mb-n">右侧读数用的 N<output id="mb-v-n"></output></label><input type="range" id="mb-n" min="0" max="6" step="1" value="3"></div>
+</div>
+<svg id="mb-plot" viewBox="0 0 720 300" role="img" aria-label="高估量随 N 变化"></svg>
+<p class="demo-note"><span style="color:#a34f08">━ single：同一个估计既挑又评</span>　<span style="color:#1d6fb8">━ double：用估计 A 挑、独立估计 B 评</span>　<span style="color:#38724b">━ min of 2：10 个估计里随机取 2 个求 min 作评分（挑仍用均值）</span></p>
+<div class="demo-results s6-wide" id="mb-stats" aria-live="polite"></div>
+<p class="demo-note">读法：single 的高估随 N 单调上升；double 把挑和评的噪声分开，高估回到 0 附近；min of 2 往下压，可能压成低估。情形 B 下另看"挑中真正最好者的概率"：噪声越大、N 越大，越容易挑错。注意 min of 2 一栏挑得更准，是因为它用 10 个估计的均值来挑、噪声更小，这是 ensemble 平均的功劳，不是取 min 的功劳。</p></section>

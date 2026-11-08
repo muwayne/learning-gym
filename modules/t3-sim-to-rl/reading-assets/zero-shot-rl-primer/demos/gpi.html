@@ -1,0 +1,17 @@
+<section class="zs-demo" aria-labelledby="gpi-title">
+  <h4 id="gpi-title">参考计算 · Envelope 与真正 GPI 的差别</h4>
+  <p class="zs-note">旧策略只有 πR 与 πL，first action 可以选 left / stay / right。默认 γ = 0.5，current-state reward。</p>
+  <div class="zs-controls">
+    <label>奖励所在格<select id="gpi-goal"><option value="0">0</option><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option></select></label>
+    <label>观察起点<select id="gpi-start"><option value="0">0</option><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option></select></label>
+    <label>第一动作后怎样继续<select id="gpi-continuation"><option value="gpi">每步重新 GPI · 新策略</option><option value="right">之后一直 πR · 评分假设</option><option value="left">之后一直 πL · 评分假设</option></select></label>
+  </div>
+  <svg id="gpi-corridor" viewBox="0 0 660 110" role="img" aria-label="GPI 组合出的逐状态动作"></svg>
+  <div id="gpi-q" class="table-wrap"></div>
+  <div id="gpi-values" class="table-wrap"></div>
+  <p id="gpi-trace" class="zs-note" aria-live="polite"></p>
+  <div id="gpi-timeline" class="table-wrap"></div>
+  <p id="gpi-total" class="zs-note" aria-live="polite"></p>
+  <p class="zs-note">时间表先执行 GPI 建议的第一动作，再按上方选择继续。当前状态先领取 reward，再执行动作；折扣乘在奖励上，stay 没有额外的动作奖励。</p>
+  <p class="zs-note">最后一列是执行 GPI 后重新评估的价值，不是 max(VR,VL)。本例 GPI 恰好最优，不能外推为一般保证。</p>
+</section>

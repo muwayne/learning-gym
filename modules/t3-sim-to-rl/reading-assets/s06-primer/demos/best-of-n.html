@@ -1,0 +1,15 @@
+<section class="function-demo s6-demo" aria-label="best-of-N 交互示例"><h4>交互示例 · 一个 state 上的 best-of-N</h4><p>固定一个 state。横轴是执行后的落点误差 <code>x' = x + a</code>，绿色带是成功区（±0.05）。蓝色阴影是 VLA 的采样密度（good mode 在 0，bad mode 在 +0.30）；绿线是真实成功概率；橙线是 critic 的评分，它在 VLA 很少采到的地方误差更大。只看一次决策，曲线来自解析函数，不训练网络。</p>
+<div class="s6-grid"><div class="s6-ctls">
+<div class="s6-ctl"><label for="s6-pgood">p_good（落在 good mode 的概率）<output id="s6-v-pgood"></output></label><input type="range" id="s6-pgood" min="0.05" max="0.95" step="0.05" value="0.6"></div>
+<div class="s6-ctl"><label for="s6-nexp">N（base 候选数）<output id="s6-v-n"></output></label><input type="range" id="s6-nexp" min="0" max="6" step="1" value="3"></div>
+<div class="s6-ctl"><label for="s6-beta">β（edit 幅度上限）<output id="s6-v-beta"></output></label><input type="range" id="s6-beta" min="0" max="0.3" step="0.01" value="0.05"></div>
+<div class="s6-ctl"><label for="s6-err">critic 误差幅度<output id="s6-v-err"></output></label><input type="range" id="s6-err" min="0" max="0.4" step="0.01" value="0.25"></div>
+<div class="s6-ctl"><label for="s6-reducer">打分方式</label><select id="s6-reducer"><option value="single">single Q</option><option value="min2">min of 2（随机取自 10 个 Q）</option></select></div>
+<p><button type="button" id="s6-resample">重新采样</button> <button type="button" id="s6-newcritic">换一个 critic</button> <button type="button" id="s6-trials">跑 2000 次统计</button></p>
+</div><div>
+<svg id="s6-plot" viewBox="0 0 720 360" role="img" aria-label="best-of-N 示意图"></svg>
+<p class="demo-note">● base 候选　◆ edit 候选（细线连回原候选）　◎ 被选中：上方是它的 critic 评分，下方绿点是它的真实成功概率</p>
+</div></div>
+<div class="demo-results" id="s6-stats-one" aria-live="polite"></div>
+<div class="demo-results s6-wide" id="s6-stats-many" aria-live="polite"></div>
+<p class="demo-note">建议依次试：把 N 从 1 拉到 64；把 critic 误差调大，比较 single Q 与 min of 2 的"平均高估"；把 β 调大，看 edit 贴着上限的比例。</p></section>

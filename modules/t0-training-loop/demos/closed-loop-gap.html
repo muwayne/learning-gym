@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>闭环鸿沟 · T0·S03 教学演示</title>
+<style>
+:root{--text-primary:#0b0b0b;--text-secondary:#52514e;--text-muted:#898781;--border:rgba(11,11,11,.15)}
+@media (prefers-color-scheme: dark){:root{--text-primary:#f0efec;--text-secondary:#c3c2b7;--text-muted:#8f8d85;--border:rgba(255,255,255,.15)}body{background:#1a1a19}}
+body{font-family:system-ui,-apple-system,"PingFang SC",sans-serif;max-width:760px;margin:2rem auto;padding:0 1rem;color:var(--text-primary)}
+button{font:inherit;padding:6px 14px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text-primary);cursor:pointer}
+button.on{background:#2a78d6;color:#fff;border-color:#2a78d6}
+input[type=range]{accent-color:#2a78d6}
+label{font-size:13px;color:var(--text-secondary);white-space:nowrap}
+</style>
+</head>
+<body>
+<h1 style="font-size:20px;font-weight:500;">闭环鸿沟：卷面分好，路考为什么零分</h1>
+<p style="font-size:14px;color:var(--text-secondary);line-height:1.7;">
+一条走廊，专家沿中心线开。<b>阴影带 = 训练数据覆盖的路面</b>：模型只在带内"会开"（模仿专家，只带一点每步偏差）；
+一旦滑出带外，就进入没人教过的世界——动作变成即兴发挥（误差 ×5、方向不稳）。
+试：①E=1 时加大"每步偏差"，看它多能扛；②E 拉到 16，看闭眼开长块怎么把小偏差养成出带；③开"恢复数据"（采数时把开偏再拉回的过程也录进数据）再看 E=16。
+<span style="color:var(--text-muted)">本页是机制卡通，不是训练出来的模型——课中你训的真 BC 会替代它。</span>
+</p>
+<div style="display:flex;align-items:center;gap:10px;margin:0 0 .6rem;flex-wrap:wrap;">
+  <label>执行块 E（看一眼连开几步）</label>
+  <span id="ebtns"></span>
+  <label style="margin-left:6px;">每步偏差 δ</label>
+  <input type="range" id="dels" min="0.01" max="0.14" step="0.005" value="0.05" style="flex:1;min-width:110px;">
+  <span id="delo" style="font-size:13px;font-weight:500;min-width:40px;">0.050</span>
+</div>
+<div style="display:flex;align-items:center;gap:10px;margin:0 0 .75rem;flex-wrap:wrap;">
+  <button id="recv">恢复数据：关</button>
+  <button id="run">▶ 开 20 次路考</button>
+  <span style="font-size:13px;color:var(--text-secondary);">通过 <span id="pass" style="font-weight:500;color:var(--text-primary);">–</span> / 20
+  · 平均首次出带步 <span id="fdiv" style="font-weight:500;color:var(--text-primary);">–</span>
+  <span style="color:var(--text-muted)">（✕ = 首次出带点）</span></span>
+</div>
+<div style="position:relative;"><canvas id="cv" style="width:100%;"></canvas></div>
+<p style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-top:.75rem;">
+读图：<span style="color:#1baf7a;font-weight:500;">绿</span>=到达终点，<span style="color:#e05c5c;font-weight:500;">红</span>=撞墙/超时。
+注意卷面分（带内模仿误差 δ）三种设置下<b>完全相同</b>——变的只是"自己出题"之后的世界：
+E 越大，小偏差越有机会累积出带；恢复数据不降低 δ，只是把"还会开"的路面加宽、并教会拉回动作。
+</p>
+<script>
+const isDark=matchMedia('(prefers-color-scheme: dark)').matches;
+const OK=isDark?'#1baf7a':'#149a6b',BAD=isDark?'#e06666':'#d64545',BAND=isDark?'rgba(57,135,229,.16)':'rgba(42,120,214,.12)';
+const ink=()=>getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim();
+const mut=()=>getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
+function rng(seed){let a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+// 世界：x 0→100，中心线 c(x)，走廊半宽 2.2
+const XMAX=100,DX=0.5,MAXST=260,WALL=2.2;
+const cen=x=>1.15*Math.sin(x/12)+0.5*Math.sin(x/31+1.3);
+let E=16,recov=false,seedCtr=1,trajs=[],anim=0,animReq=null;
+const ES=[1,2,4,8,16],eb=document.getElementById('ebtns');
+ES.forEach(v=>{const b=document.createElement('button');b.textContent=v;b.style.marginRight='4px';b.style.padding='4px 10px';
+b.onclick=()=>{E=v;[...eb.children].forEach(c=>c.classList.toggle('on',+c.textContent===E));};
+if(v===E)b.classList.add('on');eb.appendChild(b);});
+dels.oninput=()=>delo.textContent=(+dels.value).toFixed(3);
+recv.onclick=()=>{recov=!recov;recv.textContent='恢复数据：'+(recov?'开':'关');recv.classList.toggle('on',recov);};
+function rollout(r){
+  const del=+dels.value,bandHalf=recov?1.5:0.55;
+  const bias=(r()<0.5?-1:1)*del;           // 每条路考自己的固定小偏差方向
+  let x=0,y=cen(0)+(r()-0.5)*0.5,lastSteer=0,plan=[],lost=false,firstExit=-1;
+  const pts=[[x,y]];
+  for(let t=0;t<MAXST;t++){
+    if(t%E===0){                            // 重新观察：规划接下来 E 步的动作序列
+      const off=y-cen(x),inBand=Math.abs(off)<=bandHalf;
+      lost=!inBand&&!(recov&&Math.abs(off)<=WALL);   // 带内会开；恢复数据额外教过带外拉回
+      plan=[];
+      if(!lost){
+        const gain=inBand?0.38:0.30,nz=inBand?0:del*3;
+        let yy=y;                           // 内部想象：假设动作被精确执行（偏差它不知道）
+        for(let k=0;k<E;k++){const a=gain*(cen(x+DX*(k+1))-yy)+(r()-0.5)*nz;plan.push(a);yy+=a;}
+      }else for(let k=0;k<E;k++)plan.push(lastSteer+(r()-0.5)*del*10);   // 没人教过：即兴发挥
+    }
+    let steer=plan[t%E]+bias+(r()-0.5)*del*0.6;   // 盲开段：照计划走，偏差与噪声照常累积
+    if(lost)steer+=(r()-0.5)*del*6;
+    lastSteer=steer;
+    x+=DX;y+=steer;
+    pts.push([x,y]);
+    if(firstExit<0&&Math.abs(y-cen(x))>bandHalf)firstExit=t+1;
+    if(Math.abs(y-cen(x))>WALL)return{pts,ok:false,firstExit};
+    if(x>=XMAX)return{pts,ok:true,firstExit};
+  }
+  return{pts,ok:false,firstExit};
+}
+run.onclick=()=>{
+  const r=rng(1234+seedCtr++);trajs=[];
+  for(let i=0;i<20;i++)trajs.push(rollout(r));
+  const okN=trajs.filter(t=>t.ok).length,ex=trajs.filter(t=>t.firstExit>0);
+  pass.textContent=okN;
+  fdiv.textContent=ex.length?Math.round(ex.reduce((s,t)=>s+t.firstExit,0)/ex.length):'无出带';
+  anim=0;if(animReq)cancelAnimationFrame(animReq);tick();
+};
+function tick(){anim+=6;draw();if(anim<MAXST+2)animReq=requestAnimationFrame(tick);}
+const cv=document.getElementById('cv'),cx=cv.getContext('2d');
+function draw(){
+  const w=cv.clientWidth||720,h=300,s=devicePixelRatio||1;
+  cv.width=w*s;cv.height=h*s;cx.setTransform(s,0,0,s,0,0);cx.clearRect(0,0,w,h);
+  const px=x=>x/XMAX*(w-20)+10,py=y=>h/2-y/3.2*(h/2-14);
+  const bandHalf=recov?1.5:0.55;
+  // 覆盖带
+  cx.beginPath();
+  for(let x=0;x<=XMAX;x+=1)cx.lineTo(px(x),py(cen(x)+bandHalf));
+  for(let x=XMAX;x>=0;x-=1)cx.lineTo(px(x),py(cen(x)-bandHalf));
+  cx.closePath();cx.fillStyle=BAND;cx.fill();
+  // 墙与中心线
+  cx.strokeStyle=ink();cx.lineWidth=2;
+  [WALL,-WALL].forEach(o=>{cx.beginPath();for(let x=0;x<=XMAX;x+=1)cx.lineTo(px(x),py(cen(x)+o));cx.stroke();});
+  cx.strokeStyle=mut();cx.lineWidth=1;cx.setLineDash([5,5]);
+  cx.beginPath();for(let x=0;x<=XMAX;x+=1)cx.lineTo(px(x),py(cen(x)));cx.stroke();cx.setLineDash([]);
+  // 终点
+  cx.fillStyle=mut();cx.font='12px system-ui';cx.fillText('终点',w-38,py(cen(XMAX))-28);
+  cx.fillText('训练数据覆盖带（见过的路面）',14,py(cen(6)+bandHalf)-6);
+  // 轨迹
+  for(const t of trajs){
+    const n=Math.min(anim,t.pts.length);
+    cx.strokeStyle=t.ok?OK:BAD;cx.globalAlpha=0.55;cx.lineWidth=1.4;
+    cx.beginPath();for(let i=0;i<n;i++)cx.lineTo(px(t.pts[i][0]),py(t.pts[i][1]));cx.stroke();
+    cx.globalAlpha=1;
+    if(t.firstExit>0&&t.firstExit<n){const p=t.pts[t.firstExit];
+      cx.fillStyle=BAD;cx.font='bold 12px system-ui';cx.fillText('✕',px(p[0])-4,py(p[1])+4);}
+  }
+}
+addEventListener('resize',draw);draw();
+</script>
+</body>
+</html>

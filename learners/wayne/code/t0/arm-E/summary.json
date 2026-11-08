@@ -1,0 +1,36 @@
+{
+  "arm": "E",
+  "config": {
+    "seed": 20260829,
+    "arch": "3-2-1",
+    "act": "tanh",
+    "opt": "adam",
+    "lr": 0.001,
+    "batch": 256,
+    "steps": 5000,
+    "note": "E 容量瘦身: 3-2-1 单隐层宽 2"
+  },
+  "n_params": 11,
+  "final_loss_last100": 0.44276536494493485,
+  "recall_unstable": 0.832,
+  "recall_stable": 0.798,
+  "recall_gap_pp": 3.399999999999992,
+  "mid_mass_0p2_0p8": 0.504,
+  "saturated_mass": 0.283,
+  "family_recall": {
+    "broad/unstable": 0.833,
+    "broad/stable": 0.8282,
+    "force_edge/unstable": 0.8148,
+    "force_edge/stable": 0.5714,
+    "slip_edge/stable": 0.697,
+    "pose_edge/stable": 0.65
+  },
+  "grad_norm_last100_mean": {
+    "layer1": 0.054975326955318454,
+    "layer2": 0.028347977022640407
+  },
+  "param_max_abs_delta": {
+    "layer1": 1.2799581289291382,
+    "layer2": 1.9200998544692993
+  }
+}

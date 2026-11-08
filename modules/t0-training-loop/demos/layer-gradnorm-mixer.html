@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>逐层梯度调音台 · T0·S02 教学演示</title>
+<style>
+:root{--text-primary:#0b0b0b;--text-secondary:#52514e;--text-muted:#898781;--border:rgba(11,11,11,.15)}
+@media (prefers-color-scheme: dark){:root{--text-primary:#f0efec;--text-secondary:#c3c2b7;--text-muted:#8f8d85;--border:rgba(255,255,255,.15)}body{background:#1a1a19}}
+body{font-family:system-ui,-apple-system,"PingFang SC",sans-serif;max-width:740px;margin:2rem auto;padding:0 1rem;color:var(--text-primary)}
+button{font:inherit;padding:6px 14px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text-primary);cursor:pointer}
+button.on{background:#2a78d6;color:#fff;border-color:#2a78d6}
+input[type=range]{accent-color:#2a78d6}
+label{font-size:13px;color:var(--text-secondary);white-space:nowrap}
+.meter{display:flex;align-items:center;gap:10px;margin:6px 0}
+.meter .name{width:150px;font-size:13px;color:var(--text-secondary)}
+.meter .bar{flex:1;height:16px;border:1px solid var(--border);border-radius:4px;position:relative;overflow:hidden}
+.meter .fill{position:absolute;left:0;top:0;bottom:0;background:#2a78d6;transition:width .08s}
+.meter .val{width:80px;font-size:12px;text-align:right;font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<h1 style="font-size:20px;font-weight:500;">逐层梯度调音台</h1>
+<p style="font-size:14px;color:var(--text-secondary);line-height:1.7;">
+一个 3-16-16-16-1 的 tanh 网络在抓稳玩具数据上真实训练（Adam）。每层一个<b>音量表</b>：
+这一步该层收到的"调整指令"总力度（‖梯度‖，对数刻度——右移一格=×10）。
+试三个实验：①默认设置看健康的音量（各层同量级、随收敛缓慢变小）；
+②"输入尺度"拉到 ×1000——看四个音量表<b>集体掉底</b>（tanh 饱和把链条切断，B 组的昏迷）；
+③重置后把"初始化尺度"调小到 0.05——看第 1 层音量<b>先被闸住再涨起来</b>（S01 驼峰的多层版）。
+</p>
+<div style="display:flex;align-items:center;gap:10px;margin:0 0 .5rem;flex-wrap:wrap;">
+  <label>输入尺度（force 列 ×）</label><span id="sclbtns"></span>
+  <label style="margin-left:8px;">初始化尺度</label>
+  <input type="range" id="inits" min="0.05" max="1.0" step="0.05" value="0.5" style="width:110px;">
+  <span id="initso" style="font-size:13px;min-width:30px;">0.50</span>
+  <button id="play">▶ 训练</button>
+  <button id="reset">↺ 重置</button>
+  <span style="font-size:13px;color:var(--text-secondary);">step <span id="stepo" style="color:var(--text-primary);font-weight:500;">0</span>
+  · loss <span id="losso" style="color:var(--text-primary);font-weight:500;">–</span></span>
+</div>
+<div id="meters"></div>
+<p style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-top:.6rem;">
+刻度：1e-6 ──────── 1e-3 ──────── 1 ──────── 1e2（对数）。音量表读的是"催促力度"，
+读不出"指令方向是否互相打架"——方向要看梯度余弦（你 G2.0 的 D0b 测的就是它）。
+</p>
+<script>
+const isDark=matchMedia('(prefers-color-scheme: dark)').matches;
+function rng(seed){let a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+function gauss(r){let u=0,v=0;while(u===0)u=r();while(v===0)v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+// 数据：抓稳玩具规则 stable = f>0.55 && |s|<0.45 && p<0.35（已标准化尺度），5% 翻转
+const dr=rng(11),N=1024,X=[],Y=[];
+{let ns=0,nu=0;                                    // force 恒正（同真实数据）；类别配平 50/50
+while(X.length<N){const f=0.1+dr()*2,s=dr()*2-1,p=dr()*1.2-0.3;
+  let y=(f>1.05&&Math.abs(s)<0.45&&p<0.35)?1:0;if(dr()<0.05)y=1-y;
+  if((y===1?ns:nu)>=N/2)continue;
+  if(y===1)ns++;else nu++;X.push([f,s,p]);Y.push(y);}}
+const DIMS=[3,16,16,16,1],B=64;
+let scale=1,W,Bs,mAdam,vAdam,step=0,playing=false,ir,br;
+const SCALES=[1,10,100,1000],sb=document.getElementById('sclbtns');
+SCALES.forEach(v=>{const b=document.createElement('button');b.textContent='×'+v;b.style.padding='4px 8px';b.style.marginRight='4px';
+b.onclick=()=>{scale=v;[...sb.children].forEach(c=>c.classList.toggle('on',c.textContent==='×'+v));};
+if(v===1)b.classList.add('on');sb.appendChild(b);});
+inits.oninput=()=>initso.textContent=(+inits.value).toFixed(2);
+const meterBox=document.getElementById('meters'),bars=[];
+["第1层 W₁（3→16）","第2层 W₂（16→16）","第3层 W₃（16→16）","第4层 W₄（16→1）"].forEach(nm=>{
+  const d=document.createElement('div');d.className='meter';
+  d.innerHTML=`<span class="name">${nm}</span><div class="bar"><div class="fill"></div></div><span class="val">–</span>`;
+  meterBox.appendChild(d);bars.push({fill:d.querySelector('.fill'),val:d.querySelector('.val')});});
+function init(){
+  const s=+inits.value;ir=rng(42);br=rng(7);
+  W=[];Bs=[];mAdam=[];vAdam=[];
+  for(let l=0;l<DIMS.length-1;l++){
+    const w=[],m=[],v=[];
+    for(let i=0;i<DIMS[l+1];i++){const row=[],mr=[],vr=[];
+      for(let j=0;j<DIMS[l];j++){row.push(gauss(ir)*s/Math.sqrt(DIMS[l]));mr.push(0);vr.push(0);}
+      w.push(row);m.push(mr);v.push(vr);}
+    W.push(w);Bs.push(new Array(DIMS[l+1]).fill(0));mAdam.push(m);vAdam.push(v);}
+  step=0;playing=false;setBtn();losso.textContent='–';stepo.textContent='0';draw(null);
+}
+function trainStep(){
+  const lr=1e-3,b1=0.9,b2=0.999,eps=1e-8;
+  const gW=W.map(w=>w.map(r=>r.map(()=>0)));
+  let L=0;
+  for(let n=0;n<B;n++){
+    const k=Math.floor(br()*N),x0=[X[k][0]*scale,X[k][1],X[k][2]],y=Y[k];
+    const acts=[x0],pre=[];
+    for(let l=0;l<W.length;l++){
+      const z=W[l].map((row,i)=>row.reduce((s2,w,j)=>s2+w*acts[l][j],Bs[l][i]));
+      pre.push(z);
+      acts.push(l<W.length-1?z.map(Math.tanh):z);
+    }
+    const zout=acts[acts.length-1][0],sg=1/(1+Math.exp(-zout));
+    L+=-(y*Math.log(sg+1e-12)+(1-y)*Math.log(1-sg+1e-12));
+    let delta=[sg-y];
+    for(let l=W.length-1;l>=0;l--){
+      for(let i=0;i<W[l].length;i++)for(let j=0;j<W[l][i].length;j++)gW[l][i][j]+=delta[i]*acts[l][j];
+      if(l>0){
+        const nd=new Array(DIMS[l]).fill(0);
+        for(let j=0;j<DIMS[l];j++){let s2=0;
+          for(let i=0;i<W[l].length;i++)s2+=W[l][i][j]*delta[i];
+          const t=Math.tanh(pre[l-1][j]);nd[j]=s2*(1-t*t);}
+        delta=nd;
+      }
+    }
+  }
+  const norms=[];
+  step++;
+  for(let l=0;l<W.length;l++){
+    let s2=0;
+    for(let i=0;i<W[l].length;i++)for(let j=0;j<W[l][i].length;j++){
+      const g=gW[l][i][j]/B;s2+=g*g;
+      mAdam[l][i][j]=b1*mAdam[l][i][j]+(1-b1)*g;
+      vAdam[l][i][j]=b2*vAdam[l][i][j]+(1-b2)*g*g;
+      const mh=mAdam[l][i][j]/(1-Math.pow(b1,step)),vh=vAdam[l][i][j]/(1-Math.pow(b2,step));
+      W[l][i][j]-=lr*mh/(Math.sqrt(vh)+eps);
+    }
+    norms.push(Math.sqrt(s2));
+  }
+  losso.textContent=(L/B).toFixed(4);stepo.textContent=step;
+  draw(norms);
+}
+function draw(norms){
+  bars.forEach((b,l)=>{
+    if(!norms){b.fill.style.width='0%';b.val.textContent='–';return;}
+    const v=norms[l],lo=-6,hi=2;
+    const frac=Math.max(0,Math.min(1,(Math.log10(Math.max(v,1e-9))-lo)/(hi-lo)));
+    b.fill.style.width=(frac*100)+'%';
+    b.fill.style.background=v<1e-4?'#d64545':'#2a78d6';
+    b.val.textContent=v.toExponential(1);
+  });
+}
+function setBtn(){play.textContent=playing?'⏸ 暂停':'▶ 训练';}
+let timer=null;
+play.onclick=()=>{playing=!playing;setBtn();
+  if(playing){timer=setInterval(()=>{for(let i=0;i<4;i++)trainStep();},60);}
+  else clearInterval(timer);};
+reset.onclick=()=>{clearInterval(timer);init();};
+init();
+</script>
+</body>
+</html>

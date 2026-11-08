@@ -1,0 +1,300 @@
+<!doctype html>
+<!-- Generated reading edition. Source: learning-workflow.md; SHA256: 535a099f5f090063302eba852dc3ef603d2ca007b6ce5555bc1ae88a40330f74. Pandoc pandoc 3.7.0.2; native MathML, inline SVG equivalents of source Mermaid diagrams. Edit the Markdown source first. --><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Summer · 从可视化预习到实现回顾的学习流程</title><style>
+:root{color-scheme:light;--ink:#213341;--muted:#536777;--accent:#126578;--line:#d9e4e9;--paper:#fff;--tint:#f1f7f9}
+*{box-sizing:border-box}html{scroll-padding-top:24px}body{margin:0;color:var(--ink);background:#f5f7f8;font:17px/1.9 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}a{color:var(--accent);text-underline-offset:.2em}a:hover{color:#053946}header{padding:44px 40px 32px;background:#163e4b;color:#fff}header .eyebrow{font-size:13px;letter-spacing:.14em;color:#bfe3e8}header h1{font-size:clamp(26px,3vw,39px);line-height:1.4;max-width:1100px;margin:12px 0}header p{font-size:15px;color:#d2e6ea;margin:0}.layout{max-width:1480px;margin:auto;display:grid;grid-template-columns:285px minmax(0,1fr);gap:28px;padding:28px}nav{align-self:start;position:sticky;top:20px;max-height:calc(100vh - 40px);overflow:auto;padding:18px;background:var(--paper);border:1px solid var(--line);border-radius:12px;font-size:13px;line-height:1.7}nav summary{font-size:16px;font-weight:700;cursor:pointer}nav ul{list-style:none;padding-left:12px}nav>details>ul{padding-left:0}nav li{margin:8px 0}nav a{text-decoration:none}main{min-width:0;max-width:1060px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:36px 44px}h2{margin:64px 0 20px;padding-top:22px;border-top:2px solid var(--line);font-size:26px;line-height:1.5;color:#143e4c}h2:first-of-type{margin-top:30px}h3{margin:42px 0 18px;font-size:21px;line-height:1.55}h4{font-size:18px;margin-top:30px}p{margin:16px 0}strong{font-weight:650}blockquote{border-left:4px solid #4892a4;background:var(--tint);margin:20px 0;padding:8px 20px;color:#385362;font-size:15px}blockquote p{margin:10px 0}code{font: .87em/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;background:#eff3f5;border-radius:4px;padding:2px 5px;overflow-wrap:anywhere}pre{background:#f0f5f7;border:1px solid var(--line);border-radius:10px;padding:18px;overflow-x:auto}pre code{padding:0;background:none;white-space:pre;overflow-wrap:normal}.table-wrap{overflow-x:auto;margin:24px 0;border:1px solid var(--line);border-radius:9px}table{border-collapse:collapse;width:100%;font-size:14px;line-height:1.75;margin:0}th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;min-width:90px}th{background:#e9f3f5;color:#174c5b;font-weight:650}tbody tr:nth-child(even){background:#f8fafb}tr:last-child td{border-bottom:0}table p{margin:0}math{font-family:"STIX Two Math","Cambria Math",math;font-size:1.08em}.math.display{display:block;overflow-x:auto;padding:22px 14px;margin:24px 0;background:#f5f8fa;border:1px solid var(--line);border-radius:10px}.math.display math{margin:auto;white-space:nowrap;min-width:max-content}.diagram{margin:26px 0;padding:20px 12px;border:1px solid var(--line);border-radius:12px;background:#fcfefe;overflow-x:auto}.diagram svg{display:block;width:100%;min-width:500px;height:auto;margin:auto;max-width:740px}footer{font-size:12px;color:var(--muted);margin:44px 0 0;padding-top:18px;border-top:1px solid var(--line)}@media(max-width:1020px){.layout{display:block;max-width:940px;padding:18px}nav{position:static;max-height:300px;margin-bottom:20px}main{padding:24px}}@media(max-width:580px){body{font-size:16px}header{padding:28px 20px}.layout{padding:10px}main{padding:20px 16px}h2{font-size:23px}h3{font-size:20px}.diagram{padding:12px 6px}}@media print{body{background:white;font-size:11pt}header{background:white;color:#163e4b;padding:0}header .eyebrow,header p{color:#536777}nav{display:none}.layout{display:block;padding:0}main{border:0;padding:0;max-width:none}.diagram,pre,.math.display{break-inside:avoid}.diagram svg{min-width:0}h2,h3,h4{break-after:avoid}a{color:inherit}.table-wrap{overflow:visible}table{font-size:9pt}}
+.function-demo{border:1px solid #a2c5ce;border-radius:12px;padding:20px;margin:26px 0;background:#f6fafb}.function-demo h4{margin:0 0 8px}.function-demo svg{width:100%;max-height:280px;display:block;background:white;border-radius:8px}.function-demo svg text{font:14px system-ui;fill:#536777}.function-demo label{display:block;margin-top:15px;font-size:15px;font-weight:600}.function-demo output{float:right;font-variant-numeric:tabular-nums}.function-demo input[type=range]{width:100%;accent-color:#126578;height:32px}.function-demo select{font:inherit;padding:6px 12px;background:white;color:#213341;border:1px solid #a2c5ce;border-radius:6px}.demo-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 0}.demo-results div{background:white;border:1px solid #d9e4e9;border-radius:8px;padding:12px;font-size:14px}.demo-results strong{display:block;font-size:22px;color:#126578;font-variant-numeric:tabular-nums}.demo-note{font-size:14px;color:#536777}@media(max-width:580px){.demo-results{grid-template-columns:1fr}}</style></head><body><header><div class="eyebrow">SUMMER · A1 S01–S03 · 审阅稿</div><h1>Summer
+·
+从可视化预习到实现回顾的学习流程</h1><p>一个知识点一段讲解 · 已算好的例子 · 公式与图内置</p></header><div class="layout"><nav aria-label="讲义目录"><details open><summary>阅读目录</summary><ul>
+<li><a href="#固定主线按小闭环推进" id="toc-固定主线按小闭环推进">1 ·
+固定主线，按小闭环推进</a></li>
+<li><a href="#a1s01s03-的对应安排" id="toc-a1s01s03-的对应安排">2 ·
+A1·S01–S03 的对应安排</a></li>
+<li><a href="#第一例s01-的小闭环怎样实际开展"
+id="toc-第一例s01-的小闭环怎样实际开展">3 · 第一例：S01
+的小闭环怎样实际开展</a></li>
+<li><a href="#怎样记录怎样恢复下一次-session"
+id="toc-怎样记录怎样恢复下一次-session">4 · 怎样记录，怎样恢复下一次
+session</a></li>
+</ul></details></nav><main><blockquote>
+<p>授课安排 · 2026-09-14 · 根据授课人本次明确要求建立；适用于 Summer
+后续课程，A1·S01–S03 是首个落地案例。 <a
+href="learning-workflow.html">HTML
+阅读版</a>。这是学习方式与待执行案例，不是已完成记录，不替代 Summer
+的能力自述。统一课次与 Pass gates 仍见 <a
+href="../../learning-modes.md">learning modes</a>。</p>
+</blockquote>
+<h2 id="固定主线按小闭环推进">1 · 固定主线，按小闭环推进</h2>
+<p><strong>充分的可视化教学材料 → 知识点问答 → 少量手动计算 → 口述编程 →
+运行与 debug → 改动判断 → 整体回顾。</strong></p>
+<p>先把本课目标、概念地图、必需前导知识、已算好的例子和 shape 交给
+Summer，再开始提问。先读完整课程地图；每次 session
+从其中一个知识点或小组开始，不在问答时突然引入未讲过的前提。讲解阶段不打断学员逐个报乘积；进入练习阶段，再明确切换为少量手算。</p>
+<p>这个顺序是 Summer
+的典型学习路径，不要求一次坐完，也不要求每个知识点都运行一次完整训练。问答卡住就回读对应解释，公式到代码卡住就缩小输入；已有可核验证据时可短
+reactivation 后继续。默认先阅读并建立 Understand，再沿该流程进入
+Implement；是否达到 Improve 取决于正式证据，不把一次 debug 自动记为
+Improve。</p>
+<div class="table-wrap"><table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>阶段</th>
+<th>Summer 做什么</th>
+<th>讲师 / AI 做什么</th>
+<th>自然停止点与留痕</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>可视化预习</td>
+<td>看地图、例子、函数曲线、shape；指出不明白的词</td>
+<td>先补依赖概念，给完整 worked example；每轮一个核心知识点</td>
+<td>能指出这一步的输入、输出和作用；阅读本身不记通过</td>
+</tr>
+<tr>
+<td>知识点问答</td>
+<td>用自己的话作简短解释</td>
+<td>一次问一个有上下文的问题；回答后再反馈，不连续堆题</td>
+<td>留一条学员原答与修订理解</td>
+</tr>
+<tr>
+<td>少量手算</td>
+<td>算 1–3 个有代表性的格子或一步更新，并写轴名</td>
+<td>给清楚的数值、目标与舍入规则；反馈维度/机制错误</td>
+<td>算清一小步即可，不把整张矩阵当体力作业</td>
+</tr>
+<tr>
+<td>口述编程</td>
+<td>说清输入、操作顺序、参数、轴与预期 shape</td>
+<td>把学员决定转写成代码，指出含糊处；不默默替学员补核心逻辑</td>
+<td>每个核心操作能追溯到学员口述；先有预期再运行</td>
+</tr>
+<tr>
+<td>运行与 debug</td>
+<td>读实际输出、断言与报错，提出原因并选择检查</td>
+<td>执行已口述实现，提供 shape/数值/日志；把现象与解释分开</td>
+<td>一次具体 failure 被定位，并有最小验证；无故障时验证边界条件</td>
+</tr>
+<tr>
+<td>改动判断</td>
+<td>先写预测与推翻条件，一次只改一个变量，再比较结果</td>
+<td>固定输入、seed、评测口径，运行对照；检查是否引入回归</td>
+<td>至少一条可判定 prediction 和结果解释；不见结果先写答案</td>
+</tr>
+<tr>
+<td>整体回顾</td>
+<td>复述完整数据流，解释原误区与修正，说明证据边界</td>
+<td>按统一 gates 核查缺口，标出下一入口</td>
+<td>留 revised mental model、实现路径、运行证据与未解问题</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>口述编程的所有权：</strong> 它沿用学员选择操作、AI
+转写的“口述驾驶”。AI 可以搭 harness 与 assertions；核心公式、轴、mask
+和目标偏移由 Summer 决定。若 AI
+先展示了完整答案，只能记为示范，需换一个小输入或迁移情境重新取得学员自己的解释与实现证据。不得把
+AI 自动补全的完整解答记为独立掌握。</p>
+<h2 id="a1s01s03-的对应安排">2 · A1·S01–S03 的对应安排</h2>
+<p>先读 <a href="../../modules/a1-transformer/s01-s03-primer.html">HTML
+入门讲义</a> 与 <a
+href="../../modules/a1-transformer/s01-s03-overview.html">三课汇总课表</a>。讲义的
+word-level 例子便于理解；进入正式 S03 时仍使用原 character-level
+实验，先展示切分、真实 corpus、windows 和 targets，再运行。</p>
+<p>下表是问答入口索引，不要一次把全部问题发给学员。每个问题先带上对应讲义上下文；手算从同一课中挑
+1–3 项，不要求每行都算。</p>
+<div class="table-wrap"><table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>讲义知识点</th>
+<th>简单问答入口</th>
+<th>可选的小手算 / 口述衔接</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 Token / ID</td>
+<td><code>cat</code>、ID 1、embedding 有什么区别？</td>
+<td>按给定词表写一句话的 IDs</td>
+</tr>
+<tr>
+<td>2 Shape</td>
+<td><code>(B,T,D)</code> 三个轴各数什么？</td>
+<td>给两条三词输入标轴</td>
+</tr>
+<tr>
+<td>3 Dot / matmul</td>
+<td>Q 的一行与 Kᵀ 的一列对应谁？</td>
+<td>算 <code>3×2 @ 2×3</code> 的一个格子</td>
+</tr>
+<tr>
+<td>4 Weighted sum</td>
+<td>为什么输出不是简单挑一个 V？</td>
+<td>算两向量的加权和</td>
+</tr>
+<tr>
+<td>5 Activation</td>
+<td>ReLU 与 LeakyReLU 在负输入处怎样不同？</td>
+<td>输入 -2 时算两个输出；口述逐元素操作</td>
+</tr>
+<tr>
+<td>6 Softmax</td>
+<td>它为什么按一行归一化？</td>
+<td>两个相同分数对应什么分配？</td>
+</tr>
+<tr>
+<td>7 Sigmoid / BCE</td>
+<td>哪一个转换概率，哪一个还需要标签？</td>
+<td>p=0.8，比较 y=1 与 y=0 的 loss 大小</td>
+</tr>
+<tr>
+<td>8 Logit / log-prob</td>
+<td>负 log-prob 是否表示“负概率”？</td>
+<td>给定 p，区分 log p 与 -log p；可用计算器</td>
+</tr>
+<tr>
+<td>9 QKV 与 shape</td>
+<td>W_Q 和 Q 分别是什么？V 与 V_vocab 呢？</td>
+<td>写 X→Q/K/V 的 shape</td>
+</tr>
+<tr>
+<td>10 QKᵀ 分数</td>
+<td>为什么输出是位置×位置？</td>
+<td>算一个 Query 对两个 Key 的分数</td>
+</tr>
+<tr>
+<td>11 缩放</td>
+<td>分母用匹配维度还是 token 数？</td>
+<td>写出 d_k=2 时的缩放因子</td>
+</tr>
+<tr>
+<td>12 PV</td>
+<td>哪个轴在这次乘法中被求和？</td>
+<td>写 <code>(T,T) @ (T,d_v)</code> 的输出 shape</td>
+</tr>
+<tr>
+<td>13 Mask</td>
+<td>把禁止项的 score 乘 0 为什么不够？</td>
+<td>说明 e⁰ 对分母的影响</td>
+</tr>
+<tr>
+<td>14 Causal</td>
+<td>输入有当前词，为什么不算偷看答案？</td>
+<td>写 <code>the cat sat .</code> 的 x/y 对齐</td>
+</tr>
+<tr>
+<td>15 Multi-head</td>
+<td>reshape 为什么不能替代交换 T/H？</td>
+<td>追踪一个 <code>(b,t,h,r)</code> 元素的归属</td>
+</tr>
+<tr>
+<td>16 Residual</td>
+<td>相加的两条分支为什么要同 shape？</td>
+<td>算一个二维残差更新</td>
+</tr>
+<tr>
+<td>17 LayerNorm</td>
+<td>它和 gradient norm 在处理什么不同对象？</td>
+<td><code>[1,3]</code> 的均值和方差</td>
+</tr>
+<tr>
+<td>18 FFN / block</td>
+<td>哪一部分跨 token，哪一部分逐 token？</td>
+<td>口述两个 Pre-LN 子层的顺序</td>
+</tr>
+<tr>
+<td>19 Embedding / batch</td>
+<td>一条样本会不会读到另一条样本？</td>
+<td>写 IDs→embedding 的 shape</td>
+</tr>
+<tr>
+<td>20 LM head</td>
+<td>D 什么时候映射到 V_vocab？</td>
+<td>写 <code>(2,3,4) @ (4,6)</code> 的结果 shape</td>
+</tr>
+<tr>
+<td>21 Targets</td>
+<td><code>y=x</code> 优化得好能说明会续写吗？</td>
+<td>对四个 token 做一次 target shift</td>
+</tr>
+<tr>
+<td>22 Loss / gradient</td>
+<td>loss、grad norm、update norm 各说明什么？</td>
+<td>g=[3,4]，算 norm 与阈值 1 的裁剪结果</td>
+</tr>
+<tr>
+<td>23 Two loops</td>
+<td>backward 与 step 谁计算梯度、谁更新参数？</td>
+<td>口述训练与生成循环差异</td>
+</tr>
+<tr>
+<td>24 Evidence</td>
+<td>single-batch overfit 能证明泛化吗？</td>
+<td>指明 train / held-out / true target 各自的证据</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="第一例s01-的小闭环怎样实际开展">3 · 第一例：S01
+的小闭环怎样实际开展</h2>
+<p><strong>状态：待执行示例；下面没有 Summer
+的实际回答或运行结果。</strong></p>
+<p>先回读知识点 3、9–13。题面一次给全：有三个输入位置；Q 和 K 都为
+<code>(3,2)</code>；这次只计算未缩放分数，不加 mask、不做
+softmax。给定：</p>
+<pre class="text"><code>Q = [[1,0], [0,1], [1,1]]
+K = [[1,1], [2,0], [0,2]]</code></pre>
+<ol type="1">
+<li><strong>问答：</strong> 先让 Summer 解释 <code>Q @ K.T</code>
+的行/列对应谁，输出 shape 是什么；解释后再给反馈。</li>
+<li><strong>手算：</strong> 只算第 1 个 Query 与第 2 个 Key 的 dot
+product，再算第 3 个 Query 的一行。无需把九格逐个报一遍。</li>
+<li><strong>口述编程：</strong> Summer 说出输入
+shape、转置哪两个轴、用矩阵乘还是逐元素乘、预期输出；AI
+按口述转写，先打印 shape 再计算数值。</li>
+<li><strong>运行/debug：</strong>
+对比手算与实际输出。若结果不对，先定位“轴/运算/数值”中的哪一类；若直接跑通，检查交换两个
+Key 行时输出哪部分应交换。AI 不为了凑环节伪造报错。</li>
+<li><strong>改动判断：</strong> 固定 Q，只交换 K
+的前两行。先写“哪些输出会怎样变、什么结果能推翻预测”，再运行对照。随后可衔接
+scaled softmax 与 PV，或到此结束 session。</li>
+<li><strong>回顾：</strong> Summer 用一句话区分 dot product 与 matrix
+multiplication，再解释 QKᵀ
+的两轴为什么都是位置。保存口述决策、实际输出、预测判定和修正理解。</li>
+</ol>
+<details>
+<summary>
+授课人核对参考：学员回答后再展开
+</summary>
+<p>原始分数应为 <code>[[1,2,0],[1,0,2],[2,2,2]]</code>，shape
+<code>(3,3)</code>。交换 K 的前两行，输出的前两列互换，得到
+<code>[[2,1,0],[0,1,2],[2,2,2]]</code>。这只检查未缩放 QKᵀ
+的关系；不构成对完整 Attention 或训练成功的验证。</p>
+</details>
+<p>S02 接着把同一类检查扩展到 B/H、causal mask、残差与 FFN：以小 shape
+做口述和元素归属核对，再用“未来输入变化不影响过去输出”作验证。S03
+则先口述真实 x/y、logits shape 与 loss 接口，再进入原课约定的
+overfit、baseline、独立 next-token validation
+和单变量干预。训练运行仍按当次明确的配置与范围推进，本安排不自动启动训练。</p>
+<h2 id="怎样记录怎样恢复下一次-session">4 · 怎样记录，怎样恢复下一次
+session</h2>
+<p>在实际课次记录中保留：<strong>阅读范围 → 学员原答 → 小手算 →
+口述决定与实现路径 → 原始现象 → 假设/检查 → 改动前预测 → 实际对照 →
+回顾与下一入口</strong>。能够复用现有 <a
+href="../../templates/session-log.md">session-log 模板</a>
+的字段就直接复用，不复制第二份预测账本。</p>
+<p>只有实际发生的 prediction 才追加进 Summer 的 ledger；只有满足正式
+gates 的 evidence 才更新
+progress。无运行结果时写“待执行”，不要把讲义参考答案或测试脚本输出写成学员作答。每节课至少一次
+AI claim audit
+可以自然放在改动判断或回顾阶段，审查一个具体主张，而不是为了格式另造长题。</p>
+<p>下一次陪练先读本文件、对应课次、Summer 最新 session record 与
+progress；找出上次停止点，从下一小闭环继续。若个人自述仍待填写，保留这个事实，不猜测已有能力；本授课方式已明确，不因表格未填就反复要求重新选择学习模式。</p><footer>Markdown 是编辑源稿；本文件是配套 HTML 阅读版。公式使用原生 MathML，图为内嵌 SVG，不依赖网络脚本。外链材料需联网，仓库内链接需保留相对目录。</footer></main></div></body></html>

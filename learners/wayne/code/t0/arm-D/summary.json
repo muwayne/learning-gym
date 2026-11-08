@@ -1,0 +1,32 @@
+{
+  "arm": "D",
+  "config": {
+    "seed": 20260829,
+    "arch": "3-16-16-16-1",
+    "act": "tanh",
+    "opt": "adam",
+    "lr": 0.001,
+    "batch": 256,
+    "steps": 5000,
+    "note": "D 冻结纪律: layer1 requires_grad=False + 不入优化器清单，Δ 须恰为 0"
+  },
+  "n_params": 625,
+  "final_loss_last100": 0.28265520170331,
+  "recall_unstable": 0.942,
+  "recall_stable": 0.88,
+  "recall_gap_pp": 6.199999999999994,
+  "mid_mass_0p2_0p8": 0.14,
+  "saturated_mass": 0.616,
+  "grad_norm_last100_mean": {
+    "layer1": 0.0,
+    "layer2": 0.19311425723135472,
+    "layer3": 0.07364842526614666,
+    "layer4": 0.05034022169187665
+  },
+  "param_max_abs_delta": {
+    "layer1": 0.0,
+    "layer2": 1.2196818590164185,
+    "layer3": 2.1038126945495605,
+    "layer4": 1.2983808517456055
+  }
+}

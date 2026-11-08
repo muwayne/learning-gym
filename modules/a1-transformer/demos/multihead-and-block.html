@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A1·S02 · 多头切分与 Pre-LN Block</title>
+<style>
+  body { font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+         margin: 0; padding: 28px 24px 60px; background: #fafaf8; color: #1c1c28; line-height: 1.65; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 36px 0 10px; border-left: 4px solid #94a3b8; padding-left: 10px; }
+  .sub { color: #666; font-size: 13px; margin-bottom: 20px; }
+  .card { background: #fff; border: 1px solid #e5e5e0; border-radius: 10px; padding: 16px 18px; margin: 12px 0; }
+  .caption { font-size: 13px; color: #555; margin-top: 10px; }
+  .key { background: #fef9e7; border-left: 4px solid #d4a017; padding: 8px 12px; font-size: 14px; border-radius: 0 6px 6px 0; }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .arrow { color: #999; font-size: 18px; padding: 0 2px; }
+  .mat { display: inline-block; text-align: center; }
+  .mat .name { font-size: 12px; color: #444; margin-bottom: 3px; font-weight: 600; }
+  .mat .grid { display: inline-grid; gap: 2px; background: #eee; padding: 3px; border-radius: 6px; }
+  .cell { width: 40px; height: 30px; display: flex; align-items: center; justify-content: center;
+          font-size: 11px; font-variant-numeric: tabular-nums; background: #fff; border-radius: 3px; }
+  .cell.masked { background: repeating-linear-gradient(45deg, #f3f3f3, #f3f3f3 4px, #e7e7e7 4px, #e7e7e7 8px) !important;
+                 color: #aaa; }
+  .h0 { outline: 2px solid #2563eb; } .h1o { outline: 2px solid #ea580c; }
+  .legend { font-size: 13px; margin: 8px 0; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin: 0 4px 0 10px; }
+  .toggle { font-size: 14px; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 8px;
+            padding: 8px 12px; display: inline-flex; gap: 8px; align-items: center; cursor: pointer; user-select: none; }
+  .duo { display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-start; }
+  svg text { font-family: inherit; }
+</style>
+</head>
+<body>
+<h1>多头切分与 Pre-LN Block</h1>
+<div class="sub">A1·S02 配套演示 · toy 设定：L=3 个 token，d=4 维，H=2 个头，每头 d_h = 4/2 = 2 维 · W_V 与 W_O 用单位阵便于看数</div>
+
+<h2>一 · 切头切的是"产出"，不是"原料"</h2>
+<div class="card">
+  <div class="flow" id="wq-demo"></div>
+  <div class="key" style="margin-top:12px">
+    W_Q 的<b>每一列</b>都吃进 X 的<b>全部 4 维</b>——所谓"头 0 的 2 维"，是投影<b>产出</b>的 2 列（蓝框），
+    不是输入 X 的前 2 个特征。所以每个头看得到全部输入信息，只是各自在自己学出来的低维子空间里打分。
+  </div>
+</div>
+
+<h2>二 · 流水线：一份输入，两张独立的注意力地图</h2>
+<div class="legend">列颜色：<span class="dot" style="background:#2563eb"></span>头 0 的维度　<span class="dot" style="background:#ea580c"></span>头 1 的维度</div>
+<label class="toggle"><input type="checkbox" id="causal"> 戴上 causal 眼罩（下三角）</label>
+<div class="card"><div class="flow" id="stage1"></div></div>
+<div class="card">
+  <div class="duo" id="stage2"></div>
+  <div class="caption">每个头独立算自己的 S→P→O（缩放除的是每头维度的 √d_h=√2，不是整体的 √d）。
+  注意两张 P 的<b>样子完全不同</b>：头 0 尖锐（各看各的近亲），头 1 平缓——同一句话，两套"谁该看谁"的判断并行发生。这就是多头多买到的东西。</div>
+</div>
+<div class="card"><div class="flow" id="stage3"></div>
+  <div class="caption">拼回：把 O⁰ 和 O¹ 按列并排接起来 → 乘 W_O 混合一次（此处单位阵，输出=拼接结果）。</div>
+</div>
+
+<h2>三 · Pre-LN Block：四个部件各司其职</h2>
+<div class="card">
+<svg viewBox="0 0 760 210" width="100%" style="max-width:760px">
+  <defs><marker id="ah" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+    <path d="M0,0 L7,3 L0,6 z" fill="#888"/></marker></defs>
+  <!-- 主干 -->
+  <g font-size="13" text-anchor="middle">
+    <rect x="10" y="85" width="46" height="40" rx="6" fill="#f1f5f9" stroke="#94a3b8"/><text x="33" y="110">X</text>
+    <rect x="96" y="85" width="52" height="40" rx="6" fill="#ecfdf5" stroke="#34d399"/><text x="122" y="110">LN</text>
+    <rect x="188" y="85" width="92" height="40" rx="6" fill="#eff6ff" stroke="#2563eb"/><text x="234" y="110">多头 Attn</text>
+    <circle cx="330" cy="105" r="15" fill="#fff" stroke="#888"/><text x="330" y="110" font-size="16">+</text>
+    <rect x="386" y="85" width="52" height="40" rx="6" fill="#ecfdf5" stroke="#34d399"/><text x="412" y="110">LN</text>
+    <rect x="478" y="85" width="92" height="40" rx="6" fill="#fff7ed" stroke="#ea580c"/><text x="524" y="110">FFN</text>
+    <circle cx="620" cy="105" r="15" fill="#fff" stroke="#888"/><text x="620" y="110" font-size="16">+</text>
+    <rect x="676" y="85" width="70" height="40" rx="6" fill="#f1f5f9" stroke="#94a3b8"/><text x="711" y="110">下一层</text>
+  </g>
+  <g stroke="#888" fill="none" marker-end="url(#ah)">
+    <line x1="56" y1="105" x2="94" y2="105"/><line x1="148" y1="105" x2="186" y2="105"/>
+    <line x1="280" y1="105" x2="313" y2="105"/><line x1="345" y1="105" x2="384" y2="105"/>
+    <line x1="438" y1="105" x2="476" y2="105"/><line x1="570" y1="105" x2="603" y2="105"/>
+    <line x1="635" y1="105" x2="674" y2="105"/>
+    <!-- 残差高速路 -->
+    <path d="M 33 85 C 33 30, 330 30, 330 88"/>
+    <path d="M 360 105 C 368 45, 620 40, 620 88"/>
+  </g>
+  <g font-size="12" fill="#666" text-anchor="middle">
+    <text x="180" y="26">残差 = 高速路（信息与梯度不丢，只做增量修正）</text>
+    <text x="122" y="148">稳压器</text>
+    <text x="234" y="148">交流：唯一跨 token 的部件</text>
+    <text x="412" y="148">稳压器</text>
+    <text x="524" y="148">各自消化：逐 token，d→4d→d</text>
+  </g>
+  <g font-size="13" fill="#333" text-anchor="middle">
+    <text x="380" y="185">Pre-LN 顺序：X + Attn(LN(X)) → 再 + FFN(LN(·))　——你训的 π0.5 主干 = 这块积木 × N 层</text>
+  </g>
+</svg>
+</div>
+
+<script>
+const X  = [[2,0,1,0],[0,2,0,1],[1,1,1,1]];
+const WQ = [[1,0,0,1],[0,1,1,0],[1,0,0,-1],[0,1,-1,0]];
+const WK = WQ;
+const I4 = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
+const mm = (A,B) => A.map(r => B[0].map((_,j) => r.reduce((s,v,k) => s+v*B[k][j], 0)));
+const half = (M,h) => M.map(r => r.slice(h*2, h*2+2));
+const scoresOf = (Qh,Kh) => Qh.map(q => Kh.map(k => (q[0]*k[0]+q[1]*k[1]) / Math.SQRT2));
+function softmaxRows(S, causal){
+  return S.map((row,i) => {
+    const m = row.map((v,j) => (causal && j>i) ? -Infinity : v);
+    const mx = Math.max(...m), e = m.map(v => Math.exp(v-mx)), s = e.reduce((a,b)=>a+b,0);
+    return e.map(v => v/s);
+  });
+}
+const fmt = v => (Math.abs(v) < 5e-3 ? "0" : (Math.round(v*100)/100).toString());
+function matEl(name, M, opts = {}){
+  const el = document.createElement("div"); el.className = "mat";
+  const maxAbs = Math.max(...M.flat().map(Math.abs), 1e-9);
+  let html = `<div class="name">${name}</div><div class="grid" style="grid-template-columns:repeat(${M[0].length},40px)">`;
+  M.forEach((row,i) => row.forEach((v,j) => {
+    const color = opts.split ? (j < 2 ? "37,99,235" : "234,88,12")
+                : opts.color === "blue" ? "37,99,235" : opts.color === "orange" ? "234,88,12" : "100,116,139";
+    const a = (Math.abs(v)/maxAbs*0.55).toFixed(3);
+    const masked = opts.maskUpper && j > i;
+    html += `<div class="cell${masked ? " masked" : ""}" style="background:rgba(${color},${a})" title="第${i}行第${j}列 = ${v.toFixed(3)}">${masked ? "禁" : fmt(v)}</div>`;
+  }));
+  el.innerHTML = html + "</div>";
+  if (opts.frame) el.querySelector(".grid").classList.add(opts.frame);
+  return el;
+}
+const arrow = t => { const s = document.createElement("span"); s.className = "arrow"; s.textContent = t || "→"; return s; };
+
+// 第一节：W_Q 列着色
+const wqDemo = document.getElementById("wq-demo");
+wqDemo.append(matEl("X（L=3, d=4）", X), arrow("×"), matEl("W_Q（4×4，列按头着色）", WQ, {split:true}),
+              arrow("="), matEl("Q（左2列=头0，右2列=头1）", mm(X,WQ), {split:true}));
+
+// 第二/三节：流水线（随 causal 开关重算）
+function render(){
+  const causal = document.getElementById("causal").checked;
+  const Q = mm(X,WQ), K = mm(X,WK), V = mm(X,I4);
+  const s1 = document.getElementById("stage1"); s1.innerHTML = "";
+  s1.append(matEl("X", X), arrow(), matEl("Q = X·W_Q", Q, {split:true}), matEl("K = X·W_K", K, {split:true}), matEl("V = X·W_V", V, {split:true}));
+  const s2 = document.getElementById("stage2"); s2.innerHTML = "";
+  const Os = [];
+  for (const h of [0,1]){
+    const Ph = softmaxRows(scoresOf(half(Q,h), half(K,h)), causal);
+    const Oh = mm(Ph, half(V,h)); Os.push(Oh);
+    const box = document.createElement("div"); box.className = "flow";
+    const c = h === 0 ? "blue" : "orange";
+    box.append(matEl(`头${h}：P${h ? "¹" : "⁰"} = softmax(Q${h?"¹":"⁰"}K${h?"¹":"⁰"}ᵀ/√2)`, Ph, {color:c, maskUpper:causal, frame: h===0?"h0":"h1o"}),
+               arrow(), matEl(`O${h?"¹":"⁰"} = P${h?"¹":"⁰"}·V${h?"¹":"⁰"}`, Oh, {color:c}));
+    s2.append(box);
+  }
+  const cat = Os[0].map((r,i) => r.concat(Os[1][i]));
+  const s3 = document.getElementById("stage3"); s3.innerHTML = "";
+  s3.append(matEl("concat(O⁰,O¹)", cat, {split:true}), arrow("× W_O →"), matEl("block 里 Attn 的输出（L,4）", mm(cat,I4)));
+}
+document.getElementById("causal").addEventListener("change", render);
+render();
+</script>
+</body>
+</html>

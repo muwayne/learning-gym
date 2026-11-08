@@ -1,0 +1,749 @@
+<!doctype html>
+<!-- Generated reading edition. Source: s06-primer.md; SHA256: 4b8188933479196b7d39ad8f035c50ba5a9d66b78ae48ca558190af4e203c700. pandoc 3.7.0.2. Edit the Markdown source first. --><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>T3·S06 讲义：让冻结的 VLA 在线变好——EXPO 的 select + edit</title><style>:root{color-scheme:light;--ink:#213341;--muted:#536777;--accent:#126578;--line:#d9e4e9;--paper:#fff;--tint:#f1f7f9}
+*{box-sizing:border-box}html{scroll-padding-top:24px}body{margin:0;color:var(--ink);background:#f5f7f8;font:17px/1.9 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}a{color:var(--accent);text-underline-offset:.2em}a:hover{color:#053946}header{padding:44px 40px 32px;background:#163e4b;color:#fff}header .eyebrow{font-size:13px;letter-spacing:.14em;color:#bfe3e8}header h1{font-size:clamp(26px,3vw,39px);line-height:1.4;max-width:1100px;margin:12px 0}header p{font-size:15px;color:#d2e6ea;margin:0}.layout{max-width:1480px;margin:auto;display:grid;grid-template-columns:285px minmax(0,1fr);gap:28px;padding:28px}nav{align-self:start;position:sticky;top:20px;max-height:calc(100vh - 40px);overflow:auto;padding:18px;background:var(--paper);border:1px solid var(--line);border-radius:12px;font-size:13px;line-height:1.7}nav summary{font-size:16px;font-weight:700;cursor:pointer}nav ul{list-style:none;padding-left:12px}nav>details>ul{padding-left:0}nav li{margin:8px 0}nav a{text-decoration:none}main{min-width:0;max-width:1060px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:36px 44px}h2{margin:64px 0 20px;padding-top:22px;border-top:2px solid var(--line);font-size:26px;line-height:1.5;color:#143e4c}h2:first-of-type{margin-top:30px}h3{margin:42px 0 18px;font-size:21px;line-height:1.55}h4{font-size:18px;margin-top:30px}p{margin:16px 0}strong{font-weight:650}blockquote{border-left:4px solid #4892a4;background:var(--tint);margin:20px 0;padding:8px 20px;color:#385362;font-size:15px}blockquote p{margin:10px 0}code{font: .87em/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;background:#eff3f5;border-radius:4px;padding:2px 5px;overflow-wrap:anywhere}pre{background:#f0f5f7;border:1px solid var(--line);border-radius:10px;padding:18px;overflow-x:auto}pre code{padding:0;background:none;white-space:pre;overflow-wrap:normal}.table-wrap{overflow-x:auto;margin:24px 0;border:1px solid var(--line);border-radius:9px}table{border-collapse:collapse;width:100%;font-size:14px;line-height:1.75;margin:0}th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;min-width:90px}th{background:#e9f3f5;color:#174c5b;font-weight:650}tbody tr:nth-child(even){background:#f8fafb}tr:last-child td{border-bottom:0}table p{margin:0}math{font-family:"STIX Two Math","Cambria Math",math;font-size:1.08em}.math.display{display:block;overflow-x:auto;padding:22px 14px;margin:24px 0;background:#f5f8fa;border:1px solid var(--line);border-radius:10px}.math.display math{margin:auto;white-space:nowrap;min-width:max-content}.diagram{margin:26px 0;padding:20px 12px;border:1px solid var(--line);border-radius:12px;background:#fcfefe;overflow-x:auto}.diagram svg{display:block;width:100%;min-width:500px;height:auto;margin:auto;max-width:740px}footer{font-size:12px;color:var(--muted);margin:44px 0 0;padding-top:18px;border-top:1px solid var(--line)}@media(max-width:1020px){.layout{display:block;max-width:940px;padding:18px}nav{position:static;max-height:300px;margin-bottom:20px}main{padding:24px}}@media(max-width:580px){body{font-size:16px}header{padding:28px 20px}.layout{padding:10px}main{padding:20px 16px}h2{font-size:23px}h3{font-size:20px}.diagram{padding:12px 6px}}@media print{body{background:white;font-size:11pt}header{background:white;color:#163e4b;padding:0}header .eyebrow,header p{color:#536777}nav{display:none}.layout{display:block;padding:0}main{border:0;padding:0;max-width:none}.diagram,pre,.math.display{break-inside:avoid}.diagram svg{min-width:0}h2,h3,h4{break-after:avoid}a{color:inherit}.table-wrap{overflow:visible}table{font-size:9pt}}
+.function-demo{border:1px solid #a2c5ce;border-radius:12px;padding:20px;margin:26px 0;background:#f6fafb}.function-demo h4{margin:0 0 8px}.function-demo svg{width:100%;max-height:280px;display:block;background:white;border-radius:8px}.function-demo svg text{font:14px system-ui;fill:#536777}.function-demo label{display:block;margin-top:15px;font-size:15px;font-weight:600}.function-demo output{float:right;font-variant-numeric:tabular-nums}.function-demo input[type=range]{width:100%;accent-color:#126578;height:32px}.function-demo select{font:inherit;padding:6px 12px;background:white;color:#213341;border:1px solid #a2c5ce;border-radius:6px}.demo-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 0}.demo-results div{background:white;border:1px solid #d9e4e9;border-radius:8px;padding:12px;font-size:14px}.demo-results strong{display:block;font-size:22px;color:#126578;font-variant-numeric:tabular-nums}.demo-note{font-size:14px;color:#536777}@media(max-width:580px){.demo-results{grid-template-columns:1fr}}.s6-grid{display:grid;grid-template-columns:1fr;gap:12px}.s6-ctls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 22px;align-items:end}.s6-ctls>p{grid-column:1/-1}@media(max-width:700px){.s6-ctls{grid-template-columns:1fr}}.s6-demo button{font:inherit;font-size:14px;padding:6px 12px;margin:4px 4px 0 0;background:white;color:#213341;border:1px solid #a2c5ce;border-radius:6px;cursor:pointer}.s6-demo button:hover{border-color:#126578}.s6-demo svg{max-height:none}.s6-wide{grid-template-columns:repeat(3,minmax(0,1fr))}@media(max-width:580px){.s6-wide{grid-template-columns:1fr}}.demo-results:empty{display:none}</style></head><body><header><div class="eyebrow">T3 · S06 · 通读讲义</div><h1>T3·S06 讲义：让冻结的 VLA 在线变好——EXPO 的 select + edit</h1><p>先通读全部知识点，再进入练习单 · 公式、图与交互示例内置</p></header><div class="layout"><nav aria-label="讲义目录"><details open><summary>阅读目录</summary><ul>
+<li><a href="#0--先看全程一次-online-rl-循环里发生了什么" id="toc-0--先看全程一次-online-rl-循环里发生了什么">0 · 先看全程：一次 online RL 循环里发生了什么</a></li>
+<li><a href="#1--本课用到的-rl-基础重新激活" id="toc-1--本课用到的-rl-基础重新激活">1 · 本课用到的 RL 基础（重新激活）</a>
+<ul>
+<li><a href="#知识点-1--transitionrewardreturn-与-γ" id="toc-知识点-1--transitionrewardreturn-与-γ">知识点 1 · Transition、reward、return 与 γ</a></li>
+<li><a href="#知识点-2--qπ先做-a之后按-π-走" id="toc-知识点-2--qπ先做-a之后按-π-走">知识点 2 · Qπ：先做 a，之后按 π 走</a></li>
+<li><a href="#知识点-3--td-target用一步真实--后面估计当学习目标" id="toc-知识点-3--td-target用一步真实--后面估计当学习目标">知识点 3 · TD target：用"一步真实 + 后面估计"当学习目标</a></li>
+<li><a href="#知识点-4--termination-与-truncation什么时候-mask-该是-0" id="toc-知识点-4--termination-与-truncation什么时候-mask-该是-0">知识点 4 · Termination 与 truncation：什么时候 mask 该是 0</a></li>
+<li><a href="#知识点-5--critic-怎样训练回归--target-network" id="toc-知识点-5--critic-怎样训练回归--target-network">知识点 5 · Critic 怎样训练：回归 + target network</a></li>
+<li><a href="#知识点-6--replay-bufferoff-policy-与-utd" id="toc-知识点-6--replay-bufferoff-policy-与-utd">知识点 6 · Replay buffer、off-policy 与 UTD</a></li>
+<li><a href="#知识点-7--在多个估计里取最大会系统性高估" id="toc-知识点-7--在多个估计里取最大会系统性高估">知识点 7 · 在多个估计里取最大，会系统性高估</a></li>
+<li><a href="#知识点-8--twin--ensemble-min给取最大降温" id="toc-知识点-8--twin--ensemble-min给取最大降温">知识点 8 · Twin / ensemble min：给"取最大"降温</a></li>
+</ul></li>
+<li><a href="#2--为什么-expressive-policy-让-rl-变难" id="toc-2--为什么-expressive-policy-让-rl-变难">2 · 为什么 expressive policy 让 RL 变难</a>
+<ul>
+<li><a href="#知识点-9--expressive-policy会采样但给不出便宜的-log-π" id="toc-知识点-9--expressive-policy会采样但给不出便宜的-log-π">知识点 9 · Expressive policy：会采样，但给不出便宜的 log π</a></li>
+<li><a href="#知识点-10--四条路线q-怎样进入一个-expressive-policy" id="toc-知识点-10--四条路线q-怎样进入一个-expressive-policy">知识点 10 · 四条路线：Q 怎样进入一个 expressive policy</a></li>
+</ul></li>
+<li><a href="#3--exposelect--edit" id="toc-3--exposelect--edit">3 · EXPO：select + edit</a>
+<ul>
+<li><a href="#知识点-11--base-policy只模仿从不追-q" id="toc-知识点-11--base-policy只模仿从不追-q">知识点 11 · Base policy：只模仿，从不追 Q</a></li>
+<li><a href="#知识点-12--edit-policy-与-otf-policy" id="toc-知识点-12--edit-policy-与-otf-policy">知识点 12 · Edit policy 与 OTF policy</a></li>
+<li><a href="#知识点-13--backup-用谁q-就是谁的价值" id="toc-知识点-13--backup-用谁q-就是谁的价值">知识点 13 · Backup 用谁，Q 就是谁的价值</a></li>
+<li><a href="#知识点-14--selection-space挑选能带来多少" id="toc-知识点-14--selection-space挑选能带来多少">知识点 14 · Selection space：挑选能带来多少</a></li>
+<li><a href="#知识点-15--为什么挑选比沿梯度走更不容易被-q-的误差带偏" id="toc-知识点-15--为什么挑选比沿梯度走更不容易被-q-的误差带偏">知识点 15 · 为什么"挑选"比"沿梯度走"更不容易被 Q 的误差带偏</a></li>
+<li><a href="#知识点-16--entropy-backupexpo-的一个变体" id="toc-知识点-16--entropy-backupexpo-的一个变体">知识点 16 · Entropy backup（EXPO 的一个变体）</a></li>
+</ul></li>
+<li><a href="#4--expo-ft把-expo-搬到-vla-和真机" id="toc-4--expo-ft把-expo-搬到-vla-和真机">4 · EXPO-FT：把 EXPO 搬到 VLA 和真机</a>
+<ul>
+<li><a href="#知识点-17--action-chunk-与-n-step" id="toc-知识点-17--action-chunk-与-n-step">知识点 17 · Action chunk 与 n-step</a></li>
+<li><a href="#知识点-18--replay-的-chunk-回填与窗口丢弃" id="toc-知识点-18--replay-的-chunk-回填与窗口丢弃">知识点 18 · Replay 的 chunk 回填与窗口丢弃</a></li>
+<li><a href="#知识点-19--改进写回-vla成功-bc" id="toc-知识点-19--改进写回-vla成功-bc">知识点 19 · 改进写回 VLA：成功 BC</a></li>
+<li><a href="#知识点-20--critic-的输入与结构" id="toc-知识点-20--critic-的输入与结构">知识点 20 · Critic 的输入与结构</a></li>
+<li><a href="#知识点-21--更新节奏与计算量" id="toc-知识点-21--更新节奏与计算量">知识点 21 · 更新节奏与计算量</a></li>
+<li><a href="#知识点-22--启动条件与证据强度" id="toc-知识点-22--启动条件与证据强度">知识点 22 · 启动条件与证据强度</a></li>
+</ul></li>
+<li><a href="#5--rlt-与-expo-ft-放在一起看" id="toc-5--rlt-与-expo-ft-放在一起看">5 · RLT 与 EXPO-FT 放在一起看</a>
+<ul>
+<li><a href="#知识点-23--rlt-的结构回顾" id="toc-知识点-23--rlt-的结构回顾">知识点 23 · RLT 的结构回顾</a></li>
+<li><a href="#知识点-24--两种使用-q-的方式" id="toc-知识点-24--两种使用-q-的方式">知识点 24 · 两种使用 Q 的方式</a></li>
+<li><a href="#知识点-25--诊断地图l0l4-与监控项" id="toc-知识点-25--诊断地图l0l4-与监控项">知识点 25 · 诊断地图：L0–L4 与监控项</a></li>
+</ul></li>
+<li><a href="#6--练习要用的-cpu-toy完整走一遍" id="toc-6--练习要用的-cpu-toy完整走一遍">6 · 练习要用的 CPU toy，完整走一遍</a>
+<ul>
+<li><a href="#知识点-26--环境与冻结-vla" id="toc-知识点-26--环境与冻结-vla">知识点 26 · 环境与"冻结 VLA"</a></li>
+<li><a href="#知识点-27--agent-的部件与配置" id="toc-知识点-27--agent-的部件与配置">知识点 27 · Agent 的部件与配置</a></li>
+<li><a href="#知识点-28--评测与仪表" id="toc-知识点-28--评测与仪表">知识点 28 · 评测与仪表</a></li>
+<li><a href="#知识点-29--toy-与官方-expo-ft-的差别" id="toc-知识点-29--toy-与官方-expo-ft-的差别">知识点 29 · toy 与官方 EXPO-FT 的差别</a></li>
+</ul></li>
+<li><a href="#7--容易混淆的概念" id="toc-7--容易混淆的概念">7 · 容易混淆的概念</a></li>
+<li><a href="#附录-a--符号开卷参考" id="toc-附录-a--符号开卷参考">附录 A · 符号（开卷参考）</a></li>
+<li><a href="#附录-b--读-expo-ft-代码前的最少词汇" id="toc-附录-b--读-expo-ft-代码前的最少词汇">附录 B · 读 EXPO-FT 代码前的最少词汇</a></li>
+<li><a href="#材料依据" id="toc-材料依据">材料依据</a></li>
+</ul></details></nav><main><blockquote>
+<p>通读稿 · 2026-10-04 · 先完整读完本讲义，再进入 <a href="s06-expressive-policy-value-maximization.md">S06 练习单</a>。 阅读推荐：<a href="s06-primer.html">浏览器版 HTML</a>，公式、图与交互示例已内置，可离线打开；本 Markdown 是编辑源稿。 本讲义只讲知识，不出题，也不给 toy 实验结果；练习中要做的 prediction 不会在这里被提前回答。阅读完成不自动记为课次通过。</p>
+</blockquote>
+<h2 id="0--先看全程一次-online-rl-循环里发生了什么">0 · 先看全程：一次 online RL 循环里发生了什么</h2>
+<p>你的 π0.5 已经 SFT 到一定成功率。它会出"像样"的动作，但每次采样略有不同：有时正好，有时带着系统性偏差。EXPO-FT 想在真实交互中让整个系统更可靠，又不想直接对 VLA 做容易失控的 RL。它的做法可以压成一张图：</p>
+<figure class="diagram"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 405" role="img" aria-label="EXPO-FT 一次 online RL 循环" style="font-family:system-ui,sans-serif"><title>EXPO-FT 一次 online RL 循环</title><defs><marker id="ah-0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#64748b"/></marker></defs><rect x="10" y="30" width="110" height="66" rx="10" fill="#f1f7f9" stroke="#126578" stroke-width="1.6"/><text x="65.0" y="59.0" text-anchor="middle" font-size="15" font-weight="600" fill="#213341">observation s</text><text x="65.0" y="78.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#213341">当前状态</text><rect x="160" y="30" width="140" height="66" rx="10" fill="#e8f1fb" stroke="#1d6fb8" stroke-width="1.6"/><text x="230.0" y="59.0" text-anchor="middle" font-size="15" font-weight="600" fill="#213341">冻结的 VLA</text><text x="230.0" y="78.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#213341">采 N 个候选</text><rect x="340" y="30" width="130" height="66" rx="10" fill="#f8ecf2" stroke="#8b375d" stroke-width="1.6"/><text x="405.0" y="59.0" text-anchor="middle" font-size="15" font-weight="600" fill="#213341">edit policy</text><text x="405.0" y="78.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#213341">每个候选 ±β 修正</text><rect x="510" y="30" width="150" height="66" rx="10" fill="#fbf0e6" stroke="#a34f08" stroke-width="1.6"/><text x="585.0" y="59.0" text-anchor="middle" font-size="15" font-weight="600" fill="#213341">critic ensemble</text><text x="585.0" y="78.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#213341">给 2N 个候选打分</text><rect x="700" y="30" width="130" height="66" rx="10" fill="#f1f7f9" stroke="#126578" stroke-width="1.6"/><text x="765.0" y="59.0" text-anchor="middle" font-size="15" font-weight="600" fill="#213341">OTF</text><text x="765.0" y="78.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#213341">执行 Q 最高者</text><rect x="870" y="30" width="120" height="66" rx="10" fill="#eef7f0" stroke="#38724b" stroke-width="1.6"/><text x="930.0" y="59.0" text-anchor="middle" font-size="15" font-weight="600" fill="#213341">环境</text><text x="930.0" y="78.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#213341">reward 与 s&#x27;</text><polyline points="120,63 158,63" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#ah-0)"/><polyline points="300,63 338,63" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#ah-0)"/><polyline points="470,63 508,63" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#ah-0)"/><polyline points="660,63 698,63" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#ah-0)"/><polyline points="830,63 868,63" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#ah-0)"/><polyline points="230,96 230,112 585,112 585,98" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#ah-0)"/><text x="408" y="128" text-anchor="middle" font-size="12" fill="#536777">base 候选本身也进入打分</text><rect x="820" y="190" width="170" height="60" rx="10" fill="#ffffff" stroke="#64748b" stroke-width="1.6"/><text x="905.0" y="216.0" text-anchor="middle" font-size="15" font-weight="600" fill="#213341">replay buffer</text><text x="905.0" y="235.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#213341">所有 transition</text><polyline points="930,96 930,188" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#ah-0)"/><rect x="520" y="290" width="200" height="66" rx="10" fill="#fbf0e6" stroke="#a34f08" stroke-width="1.6"/><text x="620.0" y="319.0" text-anchor="middle" font-size="15" font-weight="600" fill="#213341">critic TD 更新</text><text x="620.0" y="338.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#213341">backup 同样用 OTF</text><rect x="280" y="290" width="200" height="66" rx="10" fill="#f8ecf2" stroke="#8b375d" stroke-width="1.6"/><text x="380.0" y="319.0" text-anchor="middle" font-size="15" font-weight="600" fill="#213341">edit 更新</text><text x="380.0" y="338.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#213341">往 Q 高处推，不超过 β</text><rect x="40" y="290" width="200" height="66" rx="10" fill="#e8f1fb" stroke="#1d6fb8" stroke-width="1.6"/><text x="140.0" y="319.0" text-anchor="middle" font-size="15" font-weight="600" fill="#213341">VLA 成功 BC</text><text x="140.0" y="338.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#213341">只用成功 episode</text><polyline points="860,250 720,300" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#ah-0)"/><polyline points="840,250 480,305" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#ah-0)"/><polyline points="825,240 240,310" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#ah-0)"/><polyline points="620,290 620,100" fill="none" stroke="#a34f08" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#ah-0)"/><polyline points="380,290 400,100" fill="none" stroke="#8b375d" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#ah-0)"/><polyline points="140,290 210,100" fill="none" stroke="#1d6fb8" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#ah-0)"/><text x="500" y="392" text-anchor="middle" font-size="12.5" fill="#536777">实线：数据流　虚线：参数更新回到对应部件</text></svg></figure>
+<p>读这张图只需要记住三句话：</p>
+<ol type="1">
+<li><strong>VLA 只负责提供候选</strong>，不直接追 Q；它的改进来自"在成功轨迹上继续模仿"。</li>
+<li><strong>critic 只负责在候选里挑</strong>，挑选同时用于执行（rollout）和训练 critic 自己（TD backup）。</li>
+<li><strong>edit 只做有界的小修正</strong>，修正幅度有上限 β。</li>
+</ol>
+<p>本讲义分七部分：第 1 部分重新激活本课用到的 RL 基础；第 2 部分说明 expressive policy 为什么难做 RL；第 3 部分讲 EXPO；第 4 部分讲 EXPO-FT 搬到 VLA 与真机时加了什么；第 5 部分把 RLT 与 EXPO-FT 放在一起看，并给出诊断地图；第 6 部分完整走一遍练习要用的 CPU toy；第 7 部分整理容易混淆的概念。附录是符号表与代码词汇。</p>
+<p>本文的数字分两类：标【例】的是为讲清概念人为设定的；引自论文、代码或仓库报告的都附来源。toy 的实验结果不在本文中出现。</p>
+<h2 id="1--本课用到的-rl-基础重新激活">1 · 本课用到的 RL 基础（重新激活）</h2>
+<h3 id="知识点-1--transitionrewardreturn-与-γ">知识点 1 · Transition、reward、return 与 γ</h3>
+<p>一次交互记成一条 <strong>transition</strong>：<code>(s, a, r, s', done)</code>。<code>s</code> 是执行前的状态，<code>a</code> 是实际执行的动作，<code>r</code> 是这一步环境给的 <strong>reward</strong>，<code>s'</code> 是执行后的状态，<code>done</code> 表示 episode 是否在这里结束。</p>
+<p><strong>Return</strong> 是从现在起累积的 reward，常用折扣形式：</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>G</mi><mi>t</mi></msub><mo>=</mo><msub><mi>r</mi><mi>t</mi></msub><mo>+</mo><mi>γ</mi><msub><mi>r</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>+</mo><msup><mi>γ</mi><mn>2</mn></msup><msub><mi>r</mi><mrow><mi>t</mi><mo>+</mo><mn>2</mn></mrow></msub><mo>+</mo><mi>⋯</mi></mrow><annotation encoding="application/x-tex">G_t = r_t + \gamma r_{t+1} + \gamma^2 r_{t+2} + \cdots</annotation></semantics></math></p>
+<p><code>γ</code>（discount factor）越接近 1，越重视远处的 reward。</p>
+<p>【例】稀疏任务：只有成功那一步 reward=1，其他都是 0，成功即结束。如果第 3 次决策才成功，<code>G_0 = 0 + 0.99·0 + 0.99²·1 = 0.9801</code>。同一个任务早一步成功，return 更高。</p>
+<p>工作对应：pi-expo-sim 最早按规则检测器的 0/1 成功信号设计（早期 RoboDojo 设计 §4）；StackCube X3 实际采用势差分 reward R1，见 reward 设计（内部资料） 与<a href="expo-ft-casebook.md">复现案例集</a>案例 7–9。</p>
+<h3 id="知识点-2--qπ先做-a之后按-π-走">知识点 2 · Qπ：先做 a，之后按 π 走</h3>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>Q</mi><mi>π</mi></msup><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>,</mo><mi>a</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>𝔼</mi><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">[</mo><mspace width="0.167em"></mspace><msub><mi>G</mi><mi>t</mi></msub><mo>∣</mo><msub><mi>s</mi><mi>t</mi></msub><mo>=</mo><mi>s</mi><mo>,</mo><mspace width="0.222em"></mspace><msub><mi>a</mi><mi>t</mi></msub><mo>=</mo><mi>a</mi><mo>,</mo><mspace width="0.222em"></mspace><mrow><mtext mathvariant="normal">之后按 </mtext><mspace width="0.333em"></mspace></mrow><mi>π</mi><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> 行动</mtext></mrow><mspace width="0.167em"></mspace><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">Q^\pi(s,a) = \mathbb{E}\big[\,G_t \mid s_t=s,\ a_t=a,\ \text{之后按 }\pi\text{ 行动}\,\big]</annotation></semantics></math></p>
+<p>关键在"之后按 π"。同一个 <code>(s,a)</code>，后续换一个更强的 policy，Q 值就更高。所以<strong>说一个 Q 值之前，必须先说它是哪个 policy 的 Q</strong>。<code>V^π(s)</code> 则是在 s 直接按 π 行动的期望 return。</p>
+<p>在"只有成功给 1、成功即结束"的任务里，Q 近似于"折扣后的成功概率"；但一般任务的 Q 不等于成功概率，reward 尺度、γ 和后续 policy 都会改变它。</p>
+<p><strong>Critic</strong> 是近似 Q 的神经网络 <code>Q_φ(s,a)</code>：输入状态和动作，输出一个数。它是估计，不是真值。</p>
+<h3 id="知识点-3--td-target用一步真实--后面估计当学习目标">知识点 3 · TD target：用"一步真实 + 后面估计"当学习目标</h3>
+<p>完整 return 要等 episode 结束才知道。<strong>Temporal difference（TD）</strong> 的做法是：先用这一步真实拿到的 reward，再加上对 <code>s'</code> 之后的估计，拼成学习目标：</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mi>r</mi><mo>+</mo><mi>γ</mi><mo>⋅</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mtext mathvariant="normal">done</mtext><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><msub><mi>Q</mi><mtext mathvariant="normal">target</mtext></msub><mo stretchy="false" form="prefix">(</mo><msup><mi>s</mi><mo>′</mo></msup><mo>,</mo><msup><mi>a</mi><mo>′</mo></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">y = r + \gamma \cdot (1-\text{done}) \cdot Q_{\text{target}}(s&#39;, a&#39;)</annotation></semantics></math></p>
+<p><code>(1 − done)</code> 也常写作 <code>mask</code>。episode 已经结束时 <code>mask=0</code>，后面没有东西可以估计。这种"用自己的估计构造自己的目标"叫 <strong>bootstrapping</strong>。</p>
+<p>【例】<code>r=0</code>、未结束、<code>Q_target(s',a')=0.5</code>、<code>γ=0.99</code>：<code>y = 0 + 0.99 × 0.5 = 0.495</code>。如果 <code>done=1</code> 且 <code>r=1</code>：<code>y = 1</code>。</p>
+<p>公式里最值得盯住的是 <code>a'</code>：<strong>它由谁给出，就决定了 critic 学到的是哪个 policy 的价值</strong>。这一点在知识点 13 展开。</p>
+<h3 id="知识点-4--termination-与-truncation什么时候-mask-该是-0">知识点 4 · Termination 与 truncation：什么时候 mask 该是 0</h3>
+<ul>
+<li><strong>Termination（终止）</strong>：任务语义上结束了，例如成功或物体掉落。之后确实没有 reward，<code>mask=0</code> 是对的。</li>
+<li><strong>Truncation（截断）</strong>：只是时间到了，被人为切断。物理上任务还能继续，<code>mask=0</code> 会让 critic 误以为"之后什么都得不到"。</li>
+</ul>
+<p>两种常见处理：</p>
+<ol type="1">
+<li>把剩余时间放进 state，这样"时间快到了"本身就是状态的一部分，超时当作终止是自洽的；</li>
+<li>超时当截断，丢弃跨越截断的 TD 窗口。</li>
+</ol>
+<p>EXPO-FT 两种都用了：DROID 客户端把成功、手动终止、超时都记为 <code>done</code> 且 <code>mask=0</code>；replay 采样 n-step 窗口时，遇到"done 但 mask=1"的截断就丢弃该窗口（代码核对 §2（内部资料））。本课 toy 采用第 1 种：时间步进入 state，超时当终止。</p>
+<h3 id="知识点-5--critic-怎样训练回归--target-network">知识点 5 · Critic 怎样训练：回归 + target network</h3>
+<p>Critic 的 loss 是向 TD target 回归：</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>L</mi><mtext mathvariant="normal">critic</mtext></msub><mo>=</mo><mtext mathvariant="normal">mean</mtext><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">[</mo><mo stretchy="false" form="prefix">(</mo><msub><mi>Q</mi><mi>ϕ</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>,</mo><mi>a</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mtext mathvariant="normal">stopgrad</mtext><mo stretchy="false" form="prefix">(</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">L_{\text{critic}} = \text{mean}\big[(Q_\phi(s,a) - \text{stopgrad}(y))^2\big]</annotation></semantics></math></p>
+<p><code>stopgrad</code> 表示 y 被当作固定答案，梯度不穿过 y。</p>
+<p>y 本身用到 critic 的估计。如果直接用正在训练的 critic 计算 y，目标会跟着自己一起跳动。<strong>Target network</strong> 是 critic 的慢速副本，专门用来算 y；每次更新后用 <strong>Polyak averaging</strong> 缓慢跟随：</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ϕ</mi><mtext mathvariant="normal">target</mtext></msub><mo>←</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>τ</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><msub><mi>ϕ</mi><mtext mathvariant="normal">target</mtext></msub><mo>+</mo><mi>τ</mi><mspace width="0.167em"></mspace><mi>ϕ</mi></mrow><annotation encoding="application/x-tex">\phi_{\text{target}} \leftarrow (1-\tau)\,\phi_{\text{target}} + \tau\,\phi</annotation></semantics></math></p>
+<p>【例】<code>τ = 0.005</code> 时，target 对一次变化的"记忆"约需 <code>ln 0.5 / ln 0.995 ≈ 138</code> 次更新才衰减一半。</p>
+<h3 id="知识点-6--replay-bufferoff-policy-与-utd">知识点 6 · Replay buffer、off-policy 与 UTD</h3>
+<p>所有 transition 存进 <strong>replay buffer</strong>，训练时随机抽 minibatch。数据来自过去各时期的 policy，不一定是当前 policy 采的，所以这类方法叫 <strong>off-policy</strong>。好处是一条数据能反复使用；代价是 critic 要在"别的 policy 采的数据"上估计"当前 policy 的价值"。</p>
+<p><strong>UTD ratio（update-to-data）</strong> 是每采一个环境步做几次 critic 更新。【原文】EXPO 用 UTD 20；EXPO-FT 每次 update 调用做 20 个 critic minibatch（每个 64），约每 40 个环境步调用一次，折合约 0.5 次 critic 更新/环境步（EXPO 系列回顾 §3.1（内部资料））。</p>
+<p><strong>Online</strong> 与 <strong>off-policy</strong> 是两个维度：online 说的是数据在训练过程中持续采集；off-policy 说的是更新可以复用旧 policy 的数据。EXPO-FT 两者同时成立。</p>
+<h3 id="知识点-7--在多个估计里取最大会系统性高估">知识点 7 · 在多个估计里取最大，会系统性高估</h3>
+<p>假设 8 个候选动作的真实价值都是 0.5，critic 对每个的估计各带独立噪声，标准差 0.1。真实上它们一样好；但我们挑"估计最高"的那个，挑中的估计值期望约为：</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.5</mn><mo>+</mo><mn>0.1</mn><mo>×</mo><mi>𝔼</mi><mo stretchy="false" form="prefix">[</mo><mrow><mi>max</mi><mo>&#8289;</mo></mrow><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> of 8 standard normals</mtext></mrow><mo stretchy="false" form="postfix">]</mo><mo>≈</mo><mn>0.5</mn><mo>+</mo><mn>0.1</mn><mo>×</mo><mn>1.42</mn><mo>=</mo><mn>0.642</mn></mrow><annotation encoding="application/x-tex">0.5 + 0.1 \times \mathbb{E}[\max \text{ of 8 standard normals}] \approx 0.5 + 0.1 \times 1.42 = 0.642</annotation></semantics></math></p>
+<p>被挑中的那个，往往正好是被高估最多的那个。这叫 <strong>winner's curse</strong>，也是 Q-learning 类方法 <strong>overestimation</strong> 的根源之一。候选越多、估计噪声越大，高估越严重。如果高估的值又进了 TD target，它会被 bootstrapping 一步步传开。</p>
+<h3 id="知识点-8--twin--ensemble-min给取最大降温">知识点 8 · Twin / ensemble min：给"取最大"降温</h3>
+<p>对策是训练多个 critic，在算 TD target 时取较小值。TD3 用 2 个（twin）。<strong>REDQ</strong> 式做法训练 K 个，每次随机挑 M 个取 min。</p>
+<p>【例】两个独立、无偏、标准差 σ 的估计取 min，期望偏低约 <code>0.56σ</code>。它抵消了部分 winner's curse 的高估，但也可能在数据少的地方变得过于保守。</p>
+<p>【代码】EXPO-FT 默认 <code>num_qs=10</code>、<code>num_min_qs=2</code>：10 个 Q head，TD target 中随机取 2 个求 min（代码核对 §2（内部资料））。</p>
+<h2 id="2--为什么-expressive-policy-让-rl-变难">2 · 为什么 expressive policy 让 RL 变难</h2>
+<h3 id="知识点-9--expressive-policy会采样但给不出便宜的-log-π">知识点 9 · Expressive policy：会采样，但给不出便宜的 log π</h3>
+<p><strong>Expressive policy</strong> 指 diffusion / flow-matching 这类能表示多峰分布的 policy。π0.5 的 action expert 从噪声出发，沿学到的 vector field 积分若干步，得到一个 action chunk。</p>
+<p>它的长处是多峰：同一状态下"从左绕"和"从右绕"都是对的，单个 Gaussian 只能取平均，可能落在两者中间、哪个都不对（A2·S02 的 mode averaging）。</p>
+<p>它的短处是：给定一个动作 a，<strong>没有便宜的方法算出 <code>log π(a|s)</code></strong>（精编 <a href="../../references/rl-spinningup-digest.md">Q20</a>）。大量 RL 方法依赖这个量。</p>
+<h3 id="知识点-10--四条路线q-怎样进入一个-expressive-policy">知识点 10 · 四条路线：Q 怎样进入一个 expressive policy</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>路线</th>
+<th>代表</th>
+<th>做法</th>
+<th>主要代价</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Likelihood ratio</td>
+<td>DPPO</td>
+<td>把 denoising 链的每一步当作一个 Gaussian 小决策，套 PPO</td>
+<td>链长，credit assignment 难；需要 on-policy 数据</td>
+</tr>
+<tr>
+<td>沿采样链反传 ∇Q</td>
+<td>Diffusion-QL 类</td>
+<td>把 Q 的梯度穿过整条 denoising 链传回参数</td>
+<td>长链上梯度不稳定；EXPO 论文把这列为动机</td>
+</tr>
+<tr>
+<td>Advantage weighted / conditioned</td>
+<td>AWR、RECAP</td>
+<td><code>π̂ ∝ π_ref · exp(A/β)</code>：把 advantage 当权重或条件，回到监督学习</td>
+<td>改进受数据支撑限制；需要可靠的 advantage</td>
+</tr>
+<tr>
+<td>Value-guided selection + bounded edit</td>
+<td><strong>EXPO</strong></td>
+<td>base 只模仿；critic 在 base 样本和其有界修正里挑</td>
+<td>每次决策和每次 backup 都要采 N 个 base 样本，计算重</td>
+</tr>
+</tbody>
+</table></div>
+<p>还有一类做法不改 VLA 的参数化，而是外挂一个小网络：RLT 的 small actor 输入 VLA 的 reference 动作，沿 ∇Q 更新，再用 BC 拉回 reference（第 5 部分）。</p>
+<h2 id="3--exposelect--edit">3 · EXPO：select + edit</h2>
+<h3 id="知识点-11--base-policy只模仿从不追-q">知识点 11 · Base policy：只模仿，从不追 Q</h3>
+<p>EXPO 的 base policy 只用 imitation learning 训练。在 EXPO-FT 中，base 就是 π0.5：RL 阶段冻结图像编码器，其余可训练部分只在<strong>成功 episode</strong> 上做 flow-matching BC（【代码】<code>actor_success_only=True</code>，论文正文没有写）。</p>
+<p>这样，VLA 的分布只会往"自己做成功过的样子"收拢，不会被 Q 的误差拉到奇怪的地方。</p>
+<h3 id="知识点-12--edit-policy-与-otf-policy">知识点 12 · Edit policy 与 OTF policy</h3>
+<p><strong>Edit policy</strong> 是一个小网络，看到 <code>(s, a_base)</code> 后输出一个修正：</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>a</mi><mo accent="true">̂</mo></mover><mo>=</mo><mi>β</mi><mo>⋅</mo><mrow><mi>tanh</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>⋅</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>a</mi><mtext mathvariant="normal">edit</mtext></msub><mo>=</mo><msub><mi>a</mi><mtext mathvariant="normal">base</mtext></msub><mo>+</mo><mover><mi>a</mi><mo accent="true">̂</mo></mover></mrow><annotation encoding="application/x-tex">\hat a = \beta \cdot \tanh(\cdot), \qquad a_{\text{edit}} = a_{\text{base}} + \hat a</annotation></semantics></math></p>
+<p><code>tanh</code> 把输出压到 <code>[−1, 1]</code>，乘以 β 后修正幅度不会超过 β。edit 的目标是让 <code>Q(s, a_base + â)</code> 变大。【原文】EXPO 用 SAC 式的随机 Gaussian edit：目标中加熵奖励 <code>−α·log π_edit</code>，鼓励修正保持一定随机性；温度 α 自动调节（<strong>auto-α</strong>），实际熵低于目标熵时 α 变大，高于目标时 α 变小。</p>
+<p><strong>On-the-fly（OTF）policy</strong> 是真正执行的那个 policy：</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">OTF</mtext><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mrow><mi>arg</mi><mo>&#8289;</mo></mrow><munder><mi>max</mi><mrow><mi>a</mi><mo>∈</mo><mo stretchy="false" form="prefix">{</mo><msub><mi>a</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">}</mo><mo>∪</mo><mo stretchy="false" form="prefix">{</mo><msub><mi>a</mi><mi>i</mi></msub><mo>+</mo><msub><mover><mi>a</mi><mo accent="true">̂</mo></mover><mi>i</mi></msub><mo stretchy="false" form="postfix">}</mo></mrow></munder><mi>Q</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>,</mo><mi>a</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>a</mi><mi>i</mi></msub><mo>∼</mo><msub><mi>π</mi><mtext mathvariant="normal">base</mtext></msub><mo stretchy="false" form="prefix">(</mo><mi>⋅</mi><mo>∣</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="0.222em"></mspace><mi>i</mi><mo>=</mo><mn>1</mn><mi>.</mi><mi>.</mi><mi>N</mi></mrow><annotation encoding="application/x-tex">\text{OTF}(s) = \arg\max_{a \in \{a_i\} \cup \{a_i + \hat a_i\}} Q(s, a), \qquad a_i \sim \pi_{\text{base}}(\cdot \mid s),\ i=1..N</annotation></semantics></math></p>
+<p>N 个 base 样本加上它们各自的 edit 版本，共 2N 个候选，选 Q 最高的。【代码】EXPO-FT 默认 N=8、edit 版本也是 8 个，<code>edit_scale=0.2</code>，作用于 VLA 归一化后的动作空间。</p>
+<section class="function-demo s6-demo" aria-label="best-of-N 交互示例"><h4>交互示例 · 一个 state 上的 best-of-N</h4><p>固定一个 state。横轴是执行后的落点误差 <code>x' = x + a</code>，绿色带是成功区（±0.05）。蓝色阴影是 VLA 的采样密度（good mode 在 0，bad mode 在 +0.30）；绿线是真实成功概率；橙线是 critic 的评分，它在 VLA 很少采到的地方误差更大。只看一次决策，曲线来自解析函数，不训练网络。</p>
+<div class="s6-grid"><div class="s6-ctls">
+<div class="s6-ctl"><label for="s6-pgood">p_good（落在 good mode 的概率）<output id="s6-v-pgood"></output></label><input type="range" id="s6-pgood" min="0.05" max="0.95" step="0.05" value="0.6"></div>
+<div class="s6-ctl"><label for="s6-nexp">N（base 候选数）<output id="s6-v-n"></output></label><input type="range" id="s6-nexp" min="0" max="6" step="1" value="3"></div>
+<div class="s6-ctl"><label for="s6-beta">β（edit 幅度上限）<output id="s6-v-beta"></output></label><input type="range" id="s6-beta" min="0" max="0.3" step="0.01" value="0.05"></div>
+<div class="s6-ctl"><label for="s6-err">critic 误差幅度<output id="s6-v-err"></output></label><input type="range" id="s6-err" min="0" max="0.4" step="0.01" value="0.25"></div>
+<div class="s6-ctl"><label for="s6-reducer">打分方式</label><select id="s6-reducer"><option value="single">single Q</option><option value="min2">min of 2（随机取自 10 个 Q）</option></select></div>
+<p><button type="button" id="s6-resample">重新采样</button> <button type="button" id="s6-newcritic">换一个 critic</button> <button type="button" id="s6-trials">跑 2000 次统计</button></p>
+</div><div>
+<svg id="s6-plot" viewBox="0 0 720 360" role="img" aria-label="best-of-N 示意图"></svg>
+<p class="demo-note">● base 候选　◆ edit 候选（细线连回原候选）　◎ 被选中：上方是它的 critic 评分，下方绿点是它的真实成功概率</p>
+</div></div>
+<div class="demo-results" id="s6-stats-one" aria-live="polite"></div>
+<div class="demo-results s6-wide" id="s6-stats-many" aria-live="polite"></div>
+<p class="demo-note">建议依次试：把 N 从 1 拉到 64；把 critic 误差调大，比较 single Q 与 min of 2 的"平均高估"；把 β 调大，看 edit 贴着上限的比例。</p></section>
+<h3 id="知识点-13--backup-用谁q-就是谁的价值">知识点 13 · Backup 用谁，Q 就是谁的价值</h3>
+<p>回到 TD target 中的 <code>a'</code>。不同方法在这里放的东西不同，学到的价值也就不同：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>backup 中的 a'</th>
+<th>学到的价值</th>
+<th>代表</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>数据里实际的下一步动作</td>
+<td>采数据那个 policy 的价值</td>
+<td>SARSA、MC 回报</td>
+</tr>
+<tr>
+<td>当前 actor 的动作</td>
+<td>当前 actor 的价值</td>
+<td>TD3、SAC、RLT</td>
+</tr>
+<tr>
+<td>N 个 base 样本（加 edit）中 Q 最高者</td>
+<td>best-of-N OTF 的价值</td>
+<td>EMaQ、<strong>EXPO</strong></td>
+</tr>
+<tr>
+<td>全动作空间的 argmax</td>
+<td>最优价值 Q*</td>
+<td>Q-learning；连续动作上会对没见过的动作外推</td>
+</tr>
+</tbody>
+</table></div>
+<p>完整谱系见 RLT 方法迭代参考 §6（内部资料）。</p>
+<p>EXPO 在 rollout 和 backup 中都用 OTF，因此 critic 估计的正好是"实际执行的那个 policy"。【原文】去掉 backup 中的 OTF、只采一个 base 样本时，更新退化为 SARSA 式，学得明显变慢（EXPO Fig 5）。</p>
+<p>【例】某个 <code>s'</code>：单个 base 样本平均成功概率 0.58，8 选 1 挑对时约 0.9。用单样本 backup 时，target 约为 <code>0.99 × 0.58</code>；用 OTF backup 时，约为 <code>0.99 × 0.9</code>。两者差的不是"误差"，而是"在估计谁"。</p>
+<section class="function-demo s6-demo" aria-label="backup identity 交互示例"><h4>交互示例 · backup 用谁，Q 就是谁的价值</h4><p>同一个 next state s'，TD target 里的 <code>Q(s', a')</code> 取决于 a' 怎么来。下面是四种 a' 的真实期望成功概率（Monte Carlo，2000 次）。滑块与上一个示例共用，调整后这里自动更新。</p>
+<svg id="s6-bars" viewBox="0 0 720 220" role="img" aria-label="四种 backup 的价值"></svg>
+<p class="demo-note">第一根与第三根的差距是"估的是谁"的差别，不是误差；第三根与第二根的差距才是 critic 排序不准造成的损失；第四根是全动作空间最优，连续动作里用 learned Q 逼近它会外推到没见过的动作。</p></section>
+<h3 id="知识点-14--selection-space挑选能带来多少">知识点 14 · Selection space：挑选能带来多少</h3>
+<p>同一状态下，如果 N 个候选的真实成功率都差不多，挑得再准也没用；候选之间差异越大，挑选的收益上限越高。用一个量来描述：</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">selection space</mtext><mo>=</mo><mi>𝔼</mi><mo stretchy="false" form="prefix">[</mo><munder><mi>max</mi><mi>j</mi></munder><msub><mi>p</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">]</mo><mo>−</mo><mi>𝔼</mi><mo stretchy="false" form="prefix">[</mo><msub><mtext mathvariant="normal">mean</mtext><mi>j</mi></msub><mspace width="0.167em"></mspace><msub><mi>p</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">\text{selection space} = \mathbb{E}[\max_j p_j] - \mathbb{E}[\text{mean}_j\, p_j]</annotation></semantics></math></p>
+<p><code>p_j</code> 是"执行候选 j，之后由原 policy 接着做"的真实成功率。</p>
+<p>【例】8 个候选的真实成功率为 <code>0.9, 0.9, 0.85, 0.1, 0.05, 0.9, 0.1, 0.8</code>：均值约 0.58，最大值 0.9，selection space 约 0.32。</p>
+<ul>
+<li>critic 排序完全正确：最多拿到这 0.32；</li>
+<li>critic 排序随机：收益为 0；</li>
+<li>critic 系统性偏好某一侧：可能比单次采样还差。</li>
+</ul>
+<p>工作对应：早期 RoboDojo 设计 §5 的 G2 门槛就是它的 RoboDojo 版本（"同状态 8 个 VLA 样本中真实成功率最高者减均值 ≥ 10 pp"），用 snapshot 反事实 rollout 来测，训练前就能测。StackCube 上 X3.6.1 / X3.9 用多次真实接续直接测了这个量，见<a href="expo-ft-casebook.md">复现案例集</a>案例 10–11。</p>
+<h3 id="知识点-15--为什么挑选比沿梯度走更不容易被-q-的误差带偏">知识点 15 · 为什么"挑选"比"沿梯度走"更不容易被 Q 的误差带偏</h3>
+<p>Critic 只在数据覆盖过的动作附近比较可信。设想两种使用 Q 的方式：</p>
+<ul>
+<li><strong>沿梯度走</strong>（TD3、RLT 的 actor）：actor 不断往 <code>∇ₐQ</code> 的方向移动。如果 Q 在数据之外有一个虚假的高峰，梯度会把 actor 一路带过去。</li>
+<li><strong>在候选中挑</strong>（EXPO）：候选只能来自 base 分布及其 ±β 邻域。Q 在远处的虚假高峰再高，也不在候选里，挑不到。</li>
+</ul>
+<p>代价也在这里：如果正确动作在 base 分布之外、又超出 β，EXPO 也到不了。改进的上限由 base 的支撑范围和 β 决定。</p>
+<h3 id="知识点-16--entropy-backupexpo-的一个变体">知识点 16 · Entropy backup（EXPO 的一个变体）</h3>
+<p>【原文】数据集很窄时（例如 Adroit relocate），EXPO 在 backup 中加入软采样分布的熵项，防止 critic 在窄数据上过于自信；不加熵项时，最终性能随 IL 数据质量单调变化（Fig 7）。EXPO-FT 改用人在环干预处理窄数据问题，没有用这个变体。</p>
+<h2 id="4--expo-ft把-expo-搬到-vla-和真机">4 · EXPO-FT：把 EXPO 搬到 VLA 和真机</h2>
+<h3 id="知识点-17--action-chunk-与-n-step">知识点 17 · Action chunk 与 n-step</h3>
+<p>VLA 一次输出一段动作，执行其中前 C 步后再重新规划（代码中的 <code>replan_steps</code>）。EXPO-FT 把"一个 C 步的执行段"当作一次决策：edit 和 Q 都作用在这 C 步上，edit 作用于展平后的 <code>C × 动作维</code> 向量；TD 跨越 C 步：</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>0</mn></mrow><mrow><mi>C</mi><mo>−</mo><mn>1</mn></mrow></munderover><msup><mi>γ</mi><mi>k</mi></msup><msub><mi>r</mi><mrow><mi>t</mi><mo>+</mo><mi>k</mi></mrow></msub><mo>+</mo><msup><mi>γ</mi><mi>C</mi></msup><mo>⋅</mo><mtext mathvariant="normal">mask</mtext><mo>⋅</mo><munder><mi>min</mi><mrow><mn>2</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> of </mtext><mspace width="0.333em"></mspace></mrow><mi>K</mi></mrow></munder><msub><mi>Q</mi><mtext mathvariant="normal">target</mtext></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>s</mi><mrow><mi>t</mi><mo>+</mo><mi>C</mi></mrow></msub><mo>,</mo><mtext mathvariant="normal">OTF</mtext><mo stretchy="false" form="prefix">(</mo><msub><mi>s</mi><mrow><mi>t</mi><mo>+</mo><mi>C</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">y = \sum_{k=0}^{C-1}\gamma^k r_{t+k} + \gamma^{C} \cdot \text{mask} \cdot \min_{2\text{ of }K} Q_{\text{target}}(s_{t+C}, \text{OTF}(s_{t+C}))</annotation></semantics></math></p>
+<p>这 C 步动作是数据中实际执行的，第 C 步之后才交给 OTF。若 critic 的 action 是整个实际执行的 chunk，内部 C 步是一次 macro-action 的执行后果，<code>γ^C</code> 是跨物理步的折扣。它与 primitive-action n-step 都会累加多步 reward，但是否跨越了多次 behavior policy 决策，要看 action 接口与执行边界。中途发生 replan 或人工覆盖时，先核对 replay 实际保存的动作段。</p>
+<p>工作对应：RLT 线把执行长度 E 和回报步数 n 绑在一起（都等于 10），复审建议拆成两个旋钮（RLT 方法迭代参考 §3.3（内部资料））。【原文】EXPO-FT 在精密任务上用 C=4@10Hz，C=16 明显变差。</p>
+<h3 id="知识点-18--replay-的-chunk-回填与窗口丢弃">知识点 18 · Replay 的 chunk 回填与窗口丢弃</h3>
+<p>【代码】EXPO-FT 每个环境步都写入 replay；实际执行的动作之后会回填到前面各步的 chunk 中，因此任意一步都可以作为 chunk 起点。采样 n-step 窗口时，窗口内碰到截断就把该窗口标为无效、丢弃。</p>
+<p>工作对应：早期 RoboDojo 设计 §4 的迁移清单要求单测"25 Hz、E16 下 chunk 回填与 n_step 正确，含 snapshot 起点之后的第一个 chunk"。</p>
+<h3 id="知识点-19--改进写回-vla成功-bc">知识点 19 · 改进写回 VLA：成功 BC</h3>
+<p>EXPO-FT 中，改进分布在三处：critic、edit、以及通过成功 BC 更新的 VLA。部署时运行的是"VLA × N + edit + critic"整个组合。</p>
+<p>于是"提升"有两个层面（早期 RoboDojo 设计 §1）：</p>
+<ul>
+<li><strong>系统层</strong>：整个 OTF 组合的成功率，论文报告的是这一层；</li>
+<li><strong>模型层</strong>：RL 之后 VLA 单独推理（单次采样、不用 critic）的成功率，论文没有报告。</li>
+</ul>
+<p>【评述】论文缺一个关键对照："N=1、不用 edit、只在成功轨迹上 BC"的纯自我模仿。因此 Q 选择、edit 和成功 BC 各自贡献多少，没有拆开（EXPO 系列回顾 §3.3（内部资料））。早期 RoboDojo 设计 §6 的对照臂 A1 就是为了补这一项；StackCube X3.7 的预登记 B1 对照因条件不满足未触发，这一项至今仍未拆开（<a href="expo-ft-casebook.md">复现案例集</a>案例 17）。</p>
+<h3 id="知识点-20--critic-的输入与结构">知识点 20 · Critic 的输入与结构</h3>
+<p>【原文 / 代码】EXPO-FT 的 critic 有自己的图像编码器（ResNet-50，从零训练，带数据增强），每个 s' 只编码一次；10 个 Q 只是共享特征上的 10 个 MLP head（256, 256, 256）。edit 复用 critic 的图像特征。critic 和 edit 都没有时序编码器，chunk 直接展平输入 MLP。</p>
+<p>工作对应：critic 从像素学毫米级几何是本期风险之一；设计保留了"critic 输入特权位姿"的诊断臂，用来区分"critic 排序错是因为表征不够，还是因为数据不够"。</p>
+<h3 id="知识点-21--更新节奏与计算量">知识点 21 · 更新节奏与计算量</h3>
+<p>【代码】每次 update 调用：从 replay 采 64 × 20，拆成 20 个 critic minibatch；然后依次做 1 步 VLA BC、1 步 edit、1 步温度更新。前 10 个 episode 只采数据不更新。</p>
+<p>最贵的一步在 backup：每个 critic minibatch 要对其中 64 个 <code>s'</code> 各算一次 VLA prefix 并采 N 个样本，一次 update 调用共 1280 个 <code>s'</code>（算力评估（内部资料））。OTF backup 的价值和它的计算代价是同一件事的两面。</p>
+<h3 id="知识点-22--启动条件与证据强度">知识点 22 · 启动条件与证据强度</h3>
+<p>【原文】EXPO-FT 先把 VLA SFT 到约 40% 以上再开始 RL。这对应两个前提：执行者要有足够的成功样本，reward 才不至于太稀疏；同一状态下的候选之间要有差异，挑选才有意义。</p>
+<p>【评述】论文每个任务只训练一次、评测 30 次；30/30 的 95% 下界约为 88%。最硬的证据是与 HG-DAgger 的比较（合并 240/240 对 177/240）。</p>
+<p>工作对应：X2 计划以 StackCube <code>success_once ≥ 40%</code> 作为进入 EXPO-FT 的门槛；早期 RoboDojo 设计 §5 另有 G1（RL 段成功率 40–85%）和 G2（selection space ≥ 10 pp）。X2.4 的 H16/E16 起点越过了这个门槛，X3.7 的完整在线 EXPO 仍未验证出收益：门槛是必要条件，不是充分条件（<a href="expo-ft-casebook.md">复现案例集</a>案例 17）。</p>
+<h2 id="5--rlt-与-expo-ft-放在一起看">5 · RLT 与 EXPO-FT 放在一起看</h2>
+<h3 id="知识点-23--rlt-的结构回顾">知识点 23 · RLT 的结构回顾</h3>
+<p>RLT 冻结 VLA，从 VLA 内部压出一个紧凑的 <strong>RL token</strong> 作为状态表示；一个 small actor 输入 RL token、proprio 和 VLA 给出的 reference 动作 chunk，输出自己的 chunk；twin critic 按 TD3 方式训练；actor 的目标是"Q 高"加"别离 reference 太远"（BC anchoring）。在 T3·S07 中你已经用 CPU toy 比较过"只模仿 reference"和"同时接受 critic 指导"。</p>
+<h3 id="知识点-24--两种使用-q-的方式">知识点 24 · 两种使用 Q 的方式</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th></th>
+<th>RLT</th>
+<th>EXPO-FT</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>谁执行动作</td>
+<td>small actor</td>
+<td>VLA 本身（+ 有界 edit）</td>
+</tr>
+<tr>
+<td>Q 怎样被使用</td>
+<td>actor 沿 ∇ₐQ 更新，BC 拉回 reference</td>
+<td>在候选中 argmax；edit 有界</td>
+</tr>
+<tr>
+<td>backup 评估谁</td>
+<td>当前 actor</td>
+<td>best-of-N OTF</td>
+</tr>
+<tr>
+<td>防止走出可信区域靠什么</td>
+<td>BC 权重</td>
+<td>base 分布 + β 上限</td>
+</tr>
+<tr>
+<td>改进落在哪里</td>
+<td>small actor（部署时必须带上）</td>
+<td>VLA（成功 BC）+ edit + critic</td>
+</tr>
+<tr>
+<td>critic 表征</td>
+<td>RL token</td>
+<td>独立 ResNet-50</td>
+</tr>
+</tbody>
+</table></div>
+<figure class="diagram"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 320" role="img" aria-label="RLT 与 EXPO-FT 使用 Q 的方式" style="font-family:system-ui,sans-serif"><title>RLT 与 EXPO-FT 使用 Q 的方式</title><defs><marker id="ah-1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#64748b"/></marker></defs><rect x="10" y="10" width="470" height="300" rx="14" fill="#fafcfd" stroke="#d9e4e9"/><text x="245" y="40" text-anchor="middle" font-size="17" font-weight="650" fill="#213341">RLT：沿梯度走</text><rect x="40" y="70" width="170" height="60" rx="10" fill="#e8f1fb" stroke="#1d6fb8" stroke-width="1.6"/><text x="125.0" y="96.0" text-anchor="middle" font-size="15" font-weight="600" fill="#213341">VLA reference</text><text x="125.0" y="115.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#213341">一个 chunk</text><rect x="280" y="70" width="170" height="60" rx="10" fill="#f8ecf2" stroke="#8b375d" stroke-width="1.6"/><text x="365.0" y="96.0" text-anchor="middle" font-size="15" font-weight="600" fill="#213341">small actor</text><text x="365.0" y="115.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#213341">输入 token + reference</text><rect x="160" y="210" width="180" height="60" rx="10" fill="#fbf0e6" stroke="#a34f08" stroke-width="1.6"/><text x="250.0" y="236.0" text-anchor="middle" font-size="15" font-weight="600" fill="#213341">actor 的动作</text><text x="250.0" y="255.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#213341">可以离开 reference</text><polyline points="210,100 278,100" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#ah-1)"/><polyline points="365,130 300,208" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#ah-1)"/><text x="332.5" y="162.0" text-anchor="middle" font-size="12" fill="#536777">∇ₐQ 推动</text><polyline points="125,130 200,208" fill="none" stroke="#64748b" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#ah-1)"/><text x="162.5" y="162.0" text-anchor="middle" font-size="12" fill="#536777">BC 拉回</text><rect x="520" y="10" width="470" height="300" rx="14" fill="#fafcfd" stroke="#d9e4e9"/><text x="755" y="40" text-anchor="middle" font-size="17" font-weight="650" fill="#213341">EXPO-FT：在候选中挑</text><rect x="550" y="70" width="170" height="60" rx="10" fill="#e8f1fb" stroke="#1d6fb8" stroke-width="1.6"/><text x="635.0" y="96.0" text-anchor="middle" font-size="15" font-weight="600" fill="#213341">VLA 采 N 个</text><text x="635.0" y="115.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#213341">base 候选</text><rect x="790" y="70" width="170" height="60" rx="10" fill="#f8ecf2" stroke="#8b375d" stroke-width="1.6"/><text x="875.0" y="96.0" text-anchor="middle" font-size="15" font-weight="600" fill="#213341">± β edit</text><text x="875.0" y="115.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#213341">N 个修正版</text><rect x="670" y="210" width="180" height="60" rx="10" fill="#fbf0e6" stroke="#a34f08" stroke-width="1.6"/><text x="760.0" y="236.0" text-anchor="middle" font-size="15" font-weight="600" fill="#213341">Q 取 argmax</text><text x="760.0" y="255.0" text-anchor="middle" font-size="12.5" font-weight="400" fill="#213341">只在 2N 个里选</text><polyline points="720,100 788,100" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#ah-1)"/><polyline points="635,130 720,208" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#ah-1)"/><polyline points="875,130 800,208" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#ah-1)"/></svg></figure>
+<p>工作对应：RLT 复审发现 actor 走出了 Q 可信的范围（rollout 中 CP 修改率 60–91%，Q 与 BC 梯度余弦 −0.55），并在 §5.3 建议改试 EXPO-FT 风格，即由 VLA 执行（RLT 方法迭代参考 §5.3（内部资料））。</p>
+<h3 id="知识点-25--诊断地图l0l4-与监控项">知识点 25 · 诊断地图：L0–L4 与监控项</h3>
+<p>RLT 复审按信息的因果流向把失败分成五层，每层是上一层起作用的前提（§2（内部资料））：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>层</th>
+<th>问的是</th>
+<th>EXPO-FT 中的对应检查</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L0 执行者能力</td>
+<td>关掉 RL，执行者自己能成功多少</td>
+<td>VLA 单独成功率；G1</td>
+</tr>
+<tr>
+<td>L1 奖励信号</td>
+<td>能拿到多少正结果，传到决策点还剩多少</td>
+<td>成功 episode 比例；replay 中正 reward 的占比</td>
+</tr>
+<tr>
+<td>L2 actor 能力</td>
+<td>出动作的网络能否复现成功行为</td>
+<td>EXPO-FT 中由 VLA 承担，通常不是瓶颈</td>
+</tr>
+<tr>
+<td>L3 critic 排序</td>
+<td>同一状态下 Q 对候选的排序是否正确</td>
+<td>同状态反事实 rollout；selection space 被挑中了多少</td>
+</tr>
+<tr>
+<td>L4 策略改进</td>
+<td>使用 Q 时是否走出了 Q 可信的区域</td>
+<td>edit 贴着 β 上限的比例；ensemble 分歧；Q 超过回报上限</td>
+</tr>
+</tbody>
+</table></div>
+<p>早期 RoboDojo 设计 §7 列出的训练中监控项（StackCube X3 的实际字段见 W&amp;B 指标对照（内部资料）），可以按这张表归层：</p>
+<ul>
+<li><strong>Q 与 MC 回报的差</strong>（固定探针 snapshot 上）：先确认二者对应同一个 policy（知识点 13），再判断是 L3 还是设计使然；</li>
+<li><strong>Q 超过回报上限的比例</strong>：reward 最多为 1 时折扣回报不超过 1，超过就是高估的信号（知识点 7）；数值不越界不证明准确；</li>
+<li><strong>选中 edit 的比例、edit 是否贴着上限</strong>（<code>select_ratio_with_edit</code>、<code>mean_edit_scaled_norm</code>）：大量贴着上限说明 edit 想走得更远，可能在追 Q 的误差，也可能 β 设得太小；</li>
+<li><strong>ensemble 分歧</strong>：选中动作上的分歧明显大于数据动作上的分歧，提示正在挑数据之外的动作。</li>
+</ul>
+<p>这些是排查入口，不是从单一曲线唯一归因的规则。</p>
+<h2 id="6--练习要用的-cpu-toy完整走一遍">6 · 练习要用的 CPU toy，完整走一遍</h2>
+<p>练习单里不会再引入新概念。下面把 toy 的每个部件与前面的知识点对上。</p>
+<h3 id="知识点-26--环境与冻结-vla">知识点 26 · 环境与"冻结 VLA"</h3>
+<p>一维横向对齐，把它想成"把插头对准插孔"的最后几毫米：</p>
+<ul>
+<li>状态：当前横向误差 <code>x</code>，初始在 <code>[−0.6, 0.6]</code>；以及当前是第几次决策 <code>t</code>。</li>
+<li>动作：一次位移 <code>a ∈ [−1, 1]</code>。执行后 <code>x' = x + a + N(0, 0.02)</code>，<code>N(0, 0.02)</code> 是环境噪声。</li>
+<li><code>|x'| ≤ 0.05</code> 成功，reward 1，结束；<code>|x'| &gt; 1</code> 掉落，reward 0，结束；最多 3 次决策，超时当作终止（知识点 4 的第 1 种处理），<code>γ = 0.99</code>。</li>
+<li>每次决策视为一个已执行的 chunk（知识点 17 中的 C 在这里等于 1 次决策）。</li>
+</ul>
+<p>"冻结 VLA"是一个解析的双峰 sampler：</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mi>−</mi><mi>x</mi><mo>+</mo><mi>b</mi><mo>+</mo><mi>𝒩</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><mspace width="0.222em"></mspace><mn>0.08</mn><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><mi>b</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">{</mo><mtable><mtr><mtd columnalign="left" style="text-align: left"><mn>0</mn></mtd><mtd columnalign="left" style="text-align: left"><mrow><mtext mathvariant="normal">概率 </mtext><mspace width="0.333em"></mspace></mrow><msub><mi>p</mi><mtext mathvariant="normal">good</mtext></msub><mo>=</mo><mn>0.6</mn><mspace width="0.222em"></mspace><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">good mode</mtext><mo stretchy="false" form="postfix">)</mo></mtd></mtr><mtr><mtd columnalign="left" style="text-align: left"><mi>+</mi><mn>0.30</mn></mtd><mtd columnalign="left" style="text-align: left"><mtext mathvariant="normal">否则</mtext><mspace width="0.222em"></mspace><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">bad mode，系统性偏差</mtext><mo stretchy="false" form="postfix">)</mo></mtd></mtr></mtable></mrow></mrow><annotation encoding="application/x-tex">a = -x + b + \mathcal N(0,\ 0.08), \qquad b = \begin{cases}0 &amp; \text{概率 } p_{\text{good}}=0.6\ (\text{good mode})\\ +0.30 &amp; \text{否则}\ (\text{bad mode，系统性偏差})\end{cases}</annotation></semantics></math></p>
+<p><code>−x</code> 是"正好纠正误差"的动作。good mode 围绕正确答案散开；bad mode 带着 0.30 的固定偏差，比任何 edit 上限都大，edit 救不回来，只能靠挑选避开。它不训练、不更新，对应"base 只模仿、RL 阶段不追 Q"。</p>
+<h3 id="知识点-27--agent-的部件与配置">知识点 27 · Agent 的部件与配置</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>部件</th>
+<th>toy 中的实现</th>
+<th>对应知识点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>候选</td>
+<td>N=8 个 base 样本 + 8 个 edit 版本</td>
+<td>12</td>
+</tr>
+<tr>
+<td>edit</td>
+<td>确定性 <code>0.1·tanh(MLP(x, t, a_base))</code>，往 ensemble 平均 Q 高处推；没有熵项</td>
+<td>12</td>
+</tr>
+<tr>
+<td>critic</td>
+<td>10 个 MLP（输入 x、t、a，3→64→64→1）</td>
+<td>8、20</td>
+</tr>
+<tr>
+<td>TD target</td>
+<td>随机取 2 个 target Q 的 min；<code>mask</code> 覆盖成功、掉落、超时</td>
+<td>3、4、8</td>
+</tr>
+<tr>
+<td>target network</td>
+<td>Polyak <code>τ=0.005</code></td>
+<td>5</td>
+</tr>
+<tr>
+<td>更新节奏</td>
+<td>前 10 个 episode 只用 base 采数据；之后每个 episode 结束做 20 个 critic minibatch（每个 64）+ 1 步 edit；共 150 个 episode</td>
+<td>6、21</td>
+</tr>
+<tr>
+<td>rollout 打分</td>
+<td>2N 个候选用 ensemble 平均 Q 打分，取 argmax</td>
+<td>12</td>
+</tr>
+</tbody>
+</table></div>
+<p>练习中由你口述三个函数的意图：OTF 怎样从候选里选；backup 的下一步动作在两种模式下各取什么；TD target 怎样拼。它们在 harness 里保持空白，直到你口述。</p>
+<h3 id="知识点-28--评测与仪表">知识点 28 · 评测与仪表</h3>
+<ul>
+<li><strong>主指标</strong>：23 个固定探针初始状态 × 40 次 rollout，冻结策略后的真实成功率；</li>
+<li><strong>Q 评分 − MC 回报</strong>：在探针上，第一个决策被选中动作的 Q 评分，减去真实折扣回报的平均（知识点 13 告诉你读这个数之前先问什么）；</li>
+<li><strong>选中 edit 的比例</strong>：被执行的动作中，来自 edit 候选的占比；</li>
+<li><strong>训练前的 gate</strong>（不训练）：base 单次采样的闭环成功率，以及 selection space（知识点 14 的公式，<code>p_j</code> 用"执行候选 j，之后由 base 接着做"的 20 次 rollout 估计）；</li>
+<li><strong>replay 初始化</strong>：可以在训练前往 replay 放入若干条成功示教，对应早期 RoboDojo 设计 §3.2 讨论的 replay 初始化；</li>
+<li>默认 seeds <code>0 1 2</code>，全部报告，不挑最好；改变一个设置就是一个 arm，一次只改一项。</li>
+</ul>
+<h3 id="知识点-29--toy-与官方-expo-ft-的差别">知识点 29 · toy 与官方 EXPO-FT 的差别</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>官方 EXPO-FT</th>
+<th>本 toy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>base</td>
+<td>π0.5，在线成功 BC</td>
+<td>固定解析 sampler，不更新</td>
+</tr>
+<tr>
+<td>edit</td>
+<td>SAC 式 Gaussian + 熵 + 温度更新</td>
+<td>确定性 tanh edit，无熵</td>
+</tr>
+<tr>
+<td>chunk / n-step</td>
+<td>C 步 chunk，<code>γ^C</code>，逐步回填</td>
+<td>每次决策视为一个 chunk</td>
+</tr>
+<tr>
+<td>critic 输入</td>
+<td>ResNet-50 图像特征 + proprio</td>
+<td>真实低维状态 <code>(x, t)</code></td>
+</tr>
+<tr>
+<td>rollout 时 ensemble 的聚合</td>
+<td>待核对官方代码</td>
+<td>ensemble 平均</td>
+</tr>
+<tr>
+<td>更新节奏</td>
+<td>约每 40 环境步一次调用</td>
+<td>每 episode 一次调用</td>
+</tr>
+</tbody>
+</table></div>
+<p>toy 的价值在于秒级重跑、能看到真值；它的结论不能当作 π0.5、StackCube 或 RoboDojo 的能力证据，只用来校准"该看什么、先怀疑哪一层"。</p>
+<h2 id="7--容易混淆的概念">7 · 容易混淆的概念</h2>
+<ul>
+<li><strong>Reward、return、Q、成功概率</strong>：reward 是一步的信号；return 是累积；Q 是"先做 a、之后按 π"的期望 return；只在"成功给 1、成功即结束"的任务里，Q 才近似折扣成功概率。</li>
+<li><strong>Rollout 用的 policy 与 backup 评估的 policy</strong>：两者可以不同。不同时，Q 与实际执行的 MC 回报不一致是预期的。</li>
+<li><strong>Edit 与 actor</strong>：edit 只在 base 样本上做有界修正，不单独产生动作；RLT 的 actor 自己产生完整的 chunk。</li>
+<li><strong>挑选与梯度</strong>：挑选只在候选中比较 Q；梯度把动作往 Q 增大的方向推，可能推出数据覆盖范围。</li>
+<li><strong>Ensemble mean 与 ensemble min</strong>：mean 降低方差，不处理"取最大"带来的高估；min 主动往下压，用来抵消高估。</li>
+<li><strong>Termination 与 truncation</strong>：前者是任务真结束；后者只是时间到，处理不当会让 critic 误判后果。</li>
+<li><strong>系统层与模型层</strong>：前者测整个 OTF 组合；后者测 RL 之后 VLA 单独推理。</li>
+<li><strong>Selection space 与成功率</strong>：成功率是平均水平；selection space 是"候选之间的差异有多大"，决定挑选的收益上限。</li>
+<li><strong>Online 与 off-policy</strong>：数据何时采集，与更新能否复用旧数据，是两个维度。</li>
+</ul>
+<h2 id="附录-a--符号开卷参考">附录 A · 符号（开卷参考）</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>符号</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>s, a, r, s'</code></td>
+<td>状态、实际执行的动作、reward、下一状态</td>
+</tr>
+<tr>
+<td><code>γ</code></td>
+<td>discount factor</td>
+</tr>
+<tr>
+<td><code>done / mask</code></td>
+<td>episode 是否在此结束；<code>mask = 1 − done</code></td>
+</tr>
+<tr>
+<td><code>Q^π(s,a)</code></td>
+<td>先做 a、之后按 π 的期望 return</td>
+</tr>
+<tr>
+<td><code>Q_φ, Q_target</code></td>
+<td>critic 及其慢速副本</td>
+</tr>
+<tr>
+<td><code>τ</code></td>
+<td>Polyak 系数</td>
+</tr>
+<tr>
+<td><code>K, M</code></td>
+<td>ensemble 中 Q 的个数；TD target 中取 min 的个数（EXPO-FT 为 10、2）</td>
+</tr>
+<tr>
+<td><code>N</code></td>
+<td>每次采的 base 样本数</td>
+</tr>
+<tr>
+<td><code>β</code></td>
+<td>edit 幅度上限（代码 <code>edit_scale</code>）</td>
+</tr>
+<tr>
+<td><code>C</code></td>
+<td>执行段长度（代码 <code>replan_steps</code>），也是 TD 跨越的步数</td>
+</tr>
+<tr>
+<td><code>α</code></td>
+<td>SAC 式熵正则的温度</td>
+</tr>
+<tr>
+<td><code>p_j</code></td>
+<td>执行候选 j、之后由 base 接着做的真实成功率</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="附录-b--读-expo-ft-代码前的最少词汇">附录 B · 读 EXPO-FT 代码前的最少词汇</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>EXPOLearner</code></td>
+<td><code>expo_ft/agents/alg/</code> 下的主算法实现</td>
+</tr>
+<tr>
+<td><code>replan_steps</code></td>
+<td>执行段长度 C；replay 的 <code>n_step</code> 等于它</td>
+</tr>
+<tr>
+<td><code>num_qs</code>, <code>num_min_qs</code></td>
+<td>ensemble 大小与 TD target 中取 min 的个数</td>
+</tr>
+<tr>
+<td><code>n_edit_samples</code>, <code>edit_scale</code></td>
+<td>edit 候选数；edit 幅度上限</td>
+</tr>
+<tr>
+<td><code>actor_success_only</code></td>
+<td>VLA 的 BC 只用成功 episode</td>
+</tr>
+<tr>
+<td><code>utd_ratio</code>, <code>batch_size</code></td>
+<td>每次 update 调用的 critic minibatch 数与每个的大小</td>
+</tr>
+<tr>
+<td><code>mask</code>, <code>valids</code></td>
+<td>是否 bootstrap；n-step 窗口是否有效</td>
+</tr>
+<tr>
+<td><code>is_hil</code>, <code>hil_chunk</code></td>
+<td>人工干预的动作与包含人工动作的 chunk</td>
+</tr>
+<tr>
+<td><code>select_ratio_with_edit</code>, <code>mean_edit_scaled_norm</code></td>
+<td>选中 edit 候选的比例；edit 的平均归一化幅度</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="材料依据">材料依据</h2>
+<ul>
+<li>EXPO：<a href="https://arxiv.org/abs/2507.07986">arXiv 2507.07986</a>；EXPO-FT：<a href="https://arxiv.org/abs/2605.25477">arXiv 2605.25477</a>；官方代码 <a href="https://github.com/pd-perry/expo-ft">pd-perry/expo-ft</a></li>
+<li>仓库内：EXPO 系列回顾（内部资料）、EXPO-FT 代码核对（内部资料）、pi-expo-sim 设计（内部资料）、算力评估（内部资料）、RLT 方法迭代参考（内部资料）、<a href="../../references/rl-spinningup-digest.md">RL 问答精编</a></li>
+<li>交互示例的独立版：<a href="demos/expo-select-edit.html">expo-select-edit.html</a></li>
+</ul><footer>Markdown 是编辑源稿；本文件由 tools/build_reading_edition.py 生成。公式使用原生 MathML，图为内嵌 SVG，不依赖网络脚本。外链材料需联网，仓库内链接需保留相对目录。</footer></main></div><script>(() => {
+  const TOL = 0.05, ENV = 0.02, GOOD = 0.0, BAD = 0.30, SD = 0.08, XMIN = -0.6, XMAX = 0.75;
+  const $ = (id) => document.getElementById(id);
+  const PAL = {"--truth": "#38724b", "--critic": "#a34f08", "--base": "#1d6fb8", "--edit": "#8b375d", "--pick": "#111827", "--band": "rgba(56,114,75,.12)", "--line": "#d9e4e9", "--muted": "#536777", "--text": "#213341", "--surface-2": "#eef3f5"};
+  const css = (name) => PAL[name];
+
+  let seed = 7;
+  const rand = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
+  const randn = () => { let u = 0, v = 0; while (u === 0) u = rand(); v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+  const erf = (x) => { const t = 1 / (1 + 0.3275911 * Math.abs(x)); const y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x); return x >= 0 ? y : -y; };
+  const Phi = (z) => 0.5 * (1 + erf(z / Math.SQRT2));
+  const truth = (e) => Phi((TOL - e) / ENV) - Phi((-TOL - e) / ENV);
+  const npdf = (x, m, s) => Math.exp(-0.5 * ((x - m) / s) ** 2) / (s * Math.sqrt(2 * Math.PI));
+
+  const P = () => ({
+    pgood: +$("s6-pgood").value, n: 2 ** +$("s6-nexp").value, beta: +$("s6-beta").value,
+    err: +$("s6-err").value, reducer: $("s6-reducer").value,
+  });
+  const density = (e, p) => p.pgood * npdf(e, GOOD, SD) + (1 - p.pgood) * npdf(e, BAD, SD);
+  const sampleBase = (p) => (rand() < p.pgood ? GOOD : BAD) + SD * randn();
+
+  // a critic = 10 smooth random error fields; amplitude grows where VLA density is low
+  const newField = () => Array.from({ length: 4 }, () => ({ a: randn(), f: 4 + 10 * rand(), ph: 6.28 * rand() }));
+  const newCritic = () => Array.from({ length: 10 }, newField);
+  const fieldAt = (fd, e) => fd.reduce((s, c) => s + c.a * Math.sin(c.f * e + c.ph), 0) / 2;
+  let critic = newCritic();
+  let pickIdx = [0, 1];
+  const qhat = (e, p, cr = critic, idx = pickIdx) => {
+    const dmax = density(GOOD, p) || 1;
+    const support = Math.min(1, density(e, p) / dmax);
+    const amp = p.err * (0.35 + 1.65 * (1 - support));
+    const vals = (p.reducer === "single" ? [idx[0]] : idx).map((k) => truth(e) + amp * fieldAt(cr[k], e));
+    return Math.min(...vals);
+  };
+  const editOf = (e, p, cr, idx) => {
+    if (p.beta <= 0) return e;
+    let best = e, bv = qhat(e, p, cr, idx);
+    for (let i = -20; i <= 20; i++) { const c = e + (p.beta * i) / 20; const v = qhat(c, p, cr, idx); if (v > bv) { bv = v; best = c; } }
+    return best;
+  };
+  const choose = (p, cr = critic, idx = pickIdx) => {
+    const base = Array.from({ length: p.n }, () => sampleBase(p));
+    const edits = base.map((e) => editOf(e, p, cr, idx));
+    const cands = [...base.map((e) => ({ e, edit: false })), ...(p.beta > 0 ? edits.map((e, i) => ({ e, edit: true, from: base[i] })) : [])];
+    cands.forEach((c) => { c.q = qhat(c.e, p, cr, idx); c.t = truth(c.e); });
+    const pick = cands.reduce((a, b) => (b.q > a.q ? b : a));
+    return { cands, pick };
+  };
+
+  let current = null;
+  const fmt = (x, d = 3) => (Number.isFinite(x) ? x.toFixed(d) : "–");
+  const stat = (k, v) => `<div>${k}<strong>${v}</strong></div>`;
+
+  function drawA() {
+    const p = P();
+    $("s6-v-pgood").textContent = p.pgood.toFixed(2); $("s6-v-n").textContent = p.n;
+    $("s6-v-beta").textContent = p.beta.toFixed(2); $("s6-v-err").textContent = p.err.toFixed(2);
+    const W = 720, H = 360, L = 48, R = 16, T = 16, B = 40;
+    const sx = (e) => L + ((e - XMIN) / (XMAX - XMIN)) * (W - L - R);
+    const sy = (v) => T + (1 - (v + 0.25) / 1.5) * (H - T - B);
+    const grid = []; for (let i = 0; i <= 270; i++) grid.push(XMIN + ((XMAX - XMIN) * i) / 270);
+    const dmax = Math.max(...grid.map((e) => density(e, p)));
+    const path = (f) => grid.map((e, i) => `${i ? "L" : "M"}${sx(e).toFixed(1)},${sy(f(e)).toFixed(1)}`).join("");
+    const dens = `M${sx(XMIN)},${sy(-0.25)}` + grid.map((e) => `L${sx(e).toFixed(1)},${sy(-0.25 + 0.7 * density(e, p) / dmax).toFixed(1)}`).join("") + `L${sx(XMAX)},${sy(-0.25)}Z`;
+    let s = `<rect x="${sx(-TOL)}" y="${T}" width="${sx(TOL) - sx(-TOL)}" height="${H - T - B}" fill="${css("--band")}"/>`;
+    s += `<path d="${dens}" fill="${css("--base")}" opacity=".18"/>`;
+    [0, 0.5, 1].forEach((v) => { s += `<line x1="${L}" x2="${W - R}" y1="${sy(v)}" y2="${sy(v)}" stroke="${css("--line")}" stroke-dasharray="3 4"/><text x="${L - 8}" y="${sy(v) + 4}" text-anchor="end" font-size="11" fill="${css("--muted")}">${v}</text>`; });
+    [-0.6, -0.3, 0, 0.3, 0.6].forEach((e) => { s += `<text x="${sx(e)}" y="${H - B + 18}" text-anchor="middle" font-size="11" fill="${css("--muted")}">${e}</text>`; });
+    s += `<text x="${(L + W - R) / 2}" y="${H - 6}" text-anchor="middle" font-size="12" fill="${css("--muted")}">落点误差 x'（成功带 ±0.05）</text>`;
+    s += `<path d="${path(truth)}" fill="none" stroke="${css("--truth")}" stroke-width="2.4"/>`;
+    s += `<path d="${path((e) => qhat(e, p))}" fill="none" stroke="${css("--critic")}" stroke-width="2"/>`;
+    if (current) {
+      current.cands.forEach((c) => {
+        const x = sx(c.e), y = sy(c.q);
+        if (c.edit) {
+          s += `<line x1="${sx(c.from)}" x2="${x}" y1="${y}" y2="${y}" stroke="${css("--edit")}" stroke-width="1" opacity=".6"/>`;
+          s += `<path d="M${x},${y - 5}L${x + 5},${y}L${x},${y + 5}L${x - 5},${y}Z" fill="${css("--edit")}" opacity=".85"/>`;
+        } else {
+          s += `<circle cx="${x}" cy="${y}" r="4.2" fill="${css("--base")}" opacity=".85"/>`;
+        }
+      });
+      const pk = current.pick;
+      s += `<circle cx="${sx(pk.e)}" cy="${sy(pk.q)}" r="9" fill="none" stroke="${css("--pick")}" stroke-width="2"/>`;
+      s += `<line x1="${sx(pk.e)}" x2="${sx(pk.e)}" y1="${sy(pk.q)}" y2="${sy(pk.t)}" stroke="${css("--pick")}" stroke-dasharray="2 3"/>`;
+      s += `<circle cx="${sx(pk.e)}" cy="${sy(pk.t)}" r="4" fill="${css("--truth")}"/>`;
+    }
+    $("s6-plot").innerHTML = s;
+    if (current) {
+      const pk = current.pick;
+      $("s6-stats-one").innerHTML = stat("被选中候选的 critic 评分", fmt(pk.q)) + stat("它的真实成功概率", fmt(pk.t)) +
+        stat("评分 − 真实（这一次）", fmt(pk.q - pk.t)) + stat("选中的是", pk.edit ? "edit 候选" : "base 候选");
+    }
+  }
+
+  function runTrials() {
+    const p = P(), M = 2000;
+    let tSum = 0, gap = 0, ed = 0, bound = 0, oracle = 0, single = 0;
+    const saved = seed;
+    for (let i = 0; i < M; i++) {
+      const cr = newCritic(); const idx = [Math.floor(rand() * 10), Math.floor(rand() * 10)];
+      const { cands, pick } = choose(p, cr, idx);
+      tSum += pick.t; gap += pick.q - pick.t; ed += pick.edit ? 1 : 0;
+      if (pick.edit && Math.abs(pick.e - pick.from) >= p.beta * 0.95) bound += 1;
+      oracle += Math.max(...cands.map((c) => c.t)); single += truth(sampleBase(p));
+    }
+    seed = saved;
+    $("s6-stats-many").innerHTML = stat("单次 VLA 采样的成功率", fmt(single / M)) + stat("OTF 选中者的真实成功率", fmt(tSum / M)) +
+      stat("候选中最好者（完美 critic）", fmt(oracle / M)) + stat("平均高估：评分 − 真实", fmt(gap / M)) +
+      stat("选中 edit 的比例", fmt(ed / M, 2)) + stat("其中 edit 贴着 β 上限", fmt(ed ? bound / ed : NaN, 2));
+  }
+
+  function drawB() {
+    const p = P(), M = 2000, saved = seed;
+    let sSingle = 0, sOracle = 0, sOtf = 0;
+    for (let i = 0; i < M; i++) {
+      sSingle += truth(sampleBase(p));
+      const cr = newCritic(); const idx = [Math.floor(rand() * 10), Math.floor(rand() * 10)];
+      const { cands, pick } = choose(p, cr, idx);
+      sOracle += Math.max(...cands.map((c) => c.t)); sOtf += pick.t;
+    }
+    seed = saved;
+    const bars = [
+      ["a' = 1 个 VLA 样本（SARSA 式）", sSingle / M, css("--base")],
+      ["a' = 2N 候选中真实最好者", sOracle / M, css("--truth")],
+      ["a' = OTF（learned critic 选）", sOtf / M, css("--critic")],
+      ["a' = 全动作空间最优（V*）", truth(0), css("--muted")],
+    ];
+    const W = 720, L = 250, R = 60, rowH = 48;
+    let s = "";
+    bars.forEach(([name, v, c], i) => {
+      const y = 14 + i * rowH, w = (W - L - R) * v;
+      s += `<text x="${L - 10}" y="${y + 20}" text-anchor="end" font-size="13" fill="${css("--text")}">${name}</text>`;
+      s += `<rect x="${L}" y="${y + 4}" width="${W - L - R}" height="24" rx="5" fill="${css("--surface-2")}"/>`;
+      s += `<rect x="${L}" y="${y + 4}" width="${Math.max(0, w)}" height="24" rx="5" fill="${c}" opacity=".85"/>`;
+      s += `<text x="${L + Math.max(0, w) + 8}" y="${y + 21}" font-size="13" fill="${css("--text")}">${v.toFixed(3)}</text>`;
+    });
+    $("s6-bars").innerHTML = s;
+  }
+
+  const refresh = (resample) => { if (resample || !current) current = choose(P()); drawA(); };
+  ["s6-pgood", "s6-nexp", "s6-beta", "s6-err", "s6-reducer"].forEach((id) => $(id).addEventListener("input", () => { refresh(true); $("s6-stats-many").innerHTML = ""; drawB(); }));
+  $("s6-resample").onclick = () => refresh(true);
+  $("s6-newcritic").onclick = () => { critic = newCritic(); pickIdx = [Math.floor(rand() * 10), Math.floor(rand() * 10)]; refresh(true); };
+  $("s6-trials").onclick = runTrials;
+    refresh(true); drawB();
+})();</script></body></html>
