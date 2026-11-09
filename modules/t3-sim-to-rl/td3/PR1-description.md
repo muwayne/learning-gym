@@ -1,4 +1,4 @@
-# Suggested replacement PR1 description (not published)
+# PR1 description
 
 ## Summary
 

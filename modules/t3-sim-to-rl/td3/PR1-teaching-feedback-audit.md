@@ -4,7 +4,7 @@
 
 Audit of the teaching feedback recorded in `retro/td3-first-lesson-feedback.md`, the tutor guide and the group consensus supplied by Wayne. Checked against GitHub PR1 head `5aa289b` and the local candidate. No unseen chat or new reviewer approval is inferred.
 
-**Important:** “In PR1” below means the existing GitHub head. “Candidate” means local changes that have not been pushed. The remote PR description still describes the initial short lesson and the old HTML-build failure; it does not accurately summarize the newer files. A replacement description is supplied locally in `PR1-description.md` for publication when authorized.
+**Audit baseline:** “In PR1” below means GitHub head `5aa289b` at the time of inspection; “Candidate” means the subsequent changes in this branch. The baseline PR description described the initial short lesson and old HTML-build failure. `PR1-description.md` supplies its replacement. Wayne subsequently authorized publishing these checked changes to the existing PR; independent code review and merge remain pending.
 
 ## Teaching feedback → concrete coverage
 
@@ -34,7 +34,7 @@ SGD-only, graph-aware restore, snapshot gradients/state, fixed base z, separated
 1. Opening material did not yet put the evolutionary map up front: added a short map, without moving the full comparison into the first-read path.
 2. Splitting execution phases invalidated old debugger step references: replaced affected references with stable phase names.
 3. Tutor review/build status could be mistaken for current status: added a dated clarification, preserving the historical record.
-4. GitHub PR description is stale: prepared a replacement locally; no remote write or review-agent notification performed.
+4. GitHub PR description is stale: prepared a replacement for the authorized PR update; no review-agent notification performed.
 
 ## Remaining verification limits
 

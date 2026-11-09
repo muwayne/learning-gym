@@ -3,7 +3,7 @@
 ## Status and scope
 
 Prepared against PR #1 head `5aa289b0562c831951c3b288bb1a72f5d9839e66`.
-This is a **local review candidate**, not a published PR update or a new review approval.
+This is a **review candidate**, not a new review approval. Publication to the existing PR was explicitly authorized by Wayne after local validation.
 Wayne requested code implementing the agreed direction for reviewers to inspect.
 No other agent was contacted. No learner records, training permission, or course structure changed.
 
