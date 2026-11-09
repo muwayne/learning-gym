@@ -92,6 +92,8 @@ AI 先用选定的参考实现检查可行性，再安排 learner training predi
 
 ## P4 · TD3：旧数据怎样给 actor 一个方向
 
+**直接入门试读**：[TD3 第一篇](td3-first-lesson.md)先用短讲义看懂一次 update，无需先读完整 foundations 或通过 P0；导师另见[问答稿](td3-first-lesson-tutor.md)。读完再按下面内容分次做实现与工程练习，不将本篇阅读算作完成 P4。
+
 **对应** T3·S02；**先读** §4 + 基础讲义 13–17。先固定 batch 做机制验证，再选择小训练或既有真实复现证据。
 
 合上材料写出 `action + exploration → transition → replay → TD target → critic step → 按计数更新 actor / target`。Learner 写 `td3_target`、双 critic loss、`actor_loss`、delayed update 条件与 Polyak update；AI 管 replay、评测与画图。这里练一套可复用的 replay 闭环，后面的 SAC 只替换有算法差异的更新。
