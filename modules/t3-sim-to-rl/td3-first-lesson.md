@@ -19,7 +19,7 @@ Actor 和两个 Critics 起初可以随机初始化；target networks 起初复�
 
 下面所有 `s, a, r, s2, terminal` 都来自同一个 replay batch；不是刚采到的单条经验。`γ` 是折扣系数。`.mean()` 表示对 batch 求平均。
 
-先算固定 label，再训练两个 Critics：
+先算固定 label，再训练两个 Critics。第一次阅读可先把 `a2` 当作给定的下一动作，抓住 `y → loss_c → BP`；噪声和两次 clip 在第 3 节用数字核对：
 
 ```text
 # target policy smoothing：下一动作附近也应该值得执行
@@ -33,6 +33,8 @@ loss_c = ((Q1(s, a) - y)^2 + (Q2(s, a) - y)^2).mean()
 opt_critics.zero_grad()
 loss_c.backward(); opt_critics.step()  # 只改两个 Critics；a 是历史实际动作
 ```
+
+真实奖励 `r` 和环境转移是学习信号的锚点；未来项仍是估计。`y` 只在本次 BP 中固定，后续 update 会重新计算，不是永远不变的标签。
 
 再按较慢频率训练 Actor，并同步 target networks：
 
@@ -50,7 +52,7 @@ if critic_updates % 2 == 0:            # 这里采用常见的 delay=2
 
 这里 `network_pairs` 只含 Actor、Q1、Q2 各自与其 target 的三对参数；`τ` 是新参数混入慢副本的比例。计数按 Critic optimizer updates，而不是环境步。伪代码省略框架建图、初始化和日志，不省略学习对象及梯度边界。
 
-**两种动作不能换：** Critic 用实际执行的 `a`，因为这条奖励和后继状态属于它；Actor 用当前 `actor(s)`，因为现在要改的是当前策略。Actor BP 经过 Q1 对动作的计算，但不经过环境，也不更新 Q1 参数。
+**两种动作不能换：** Critic 用实际执行的 `a`，因为这条奖励和后继状态属于它；Actor 用当前 `actor(s)`，因为现在要改的是当前策略。Actor BP 经过 Q1 对动作的计算，但不经过环境，也不更新 Q1 参数。Critic 能给未执行动作打分，不代表评分可靠：Actor 可能利用估值误差；提高这个估计不保证真实 return 改善，TD3 的三个选择只是缓解这一风险。
 
 ## 3 · 一次能算清的例子
 

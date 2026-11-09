@@ -51,6 +51,19 @@
 
 ## 编辑与审阅记录
 
-本稿为 Codex 根据群内明确反馈整理的初稿。Orion/Atlas 已被邀请给出独立意见；收到并落实前不宣称已独立 review。已知验证范围限于文档、固定数值与路径，不包括训练、真实实现对拍或教学效果验证。
+本稿根据群内明确反馈整理。独立 BOT 模拟试教已完成，过程与修改见下；Orion/Atlas 的群内审阅尚未收到，不能把本次代理审阅冒称为两者批准。验证不包括训练、真实实现对拍或 Wayne 的学习效果。
 
 本轮本地检查：固定数值与 Actor 输出梯度有限差分核对通过；本地文件链接、代码围栏与 `git diff --check` 通过。离线 HTML 构建已尝试，因本机缺少 pandoc 失败；未安装依赖，先交付 Markdown。未检查外链可达性，未运行训练。
+
+## Independent simulated teaching review · 2026-11-08
+
+Participants: Collie (editor), native `learner_trial` (simulated learner), native `tutor_trial` (tutor / technical reviewer). These are not Orion or Atlas. The questions and responses below summarize an actual exchange between the two independent agents; they do not impersonate the human learner.
+
+1. **Learner:** How can the Critic evaluate an action never executed? Could the Actor exploit it? **Tutor:** Function approximation permits a prediction, not a reliability guarantee. Actor optimization can exploit estimation errors; TD3 mitigates rather than eliminates this. Return to `loss_a`: it increases the current estimate, not necessarily true return.
+2. **Learner:** With random networks and generated labels, where does learning begin? **Tutor:** Observed rewards and actual transitions anchor the signal. The future term remains an estimate. The label is fixed only for the current BP and is recomputed in subsequent updates.
+
+The simulated learner reported that both answers addressed the questions. Both reviewers recommended Go conditional on adding these short explanations, retaining explicit target formulas, and keeping the first-read focus on `y → loss → BP`. A proposed opaque noisy-action helper was rejected during the exchange and not adopted. The editor applied the agreed changes in §2, including an optional first-read hint without removing the exact smoothing calculation.
+
+Routing review also found that the old README entry still started at P0. README and curriculum now explicitly offer TD3-first, preserve the full revision route and course Exit Gates, and scope the local code-reading prerequisite to TD3's own core and fixed-batch verification.
+
+Outcome: both independent reviewers agreed to publish a material PR with these revisions; no unresolved blocking finding. This is editorial and simulated teaching evidence only, not evidence of learner mastery or successful training.
