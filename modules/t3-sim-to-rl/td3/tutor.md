@@ -67,3 +67,11 @@ The simulated learner reported that both answers addressed the questions. Both r
 Routing review also found that the old README entry still started at P0. README and curriculum now explicitly offer TD3-first, preserve the full revision route and course Exit Gates, and scope the local code-reading prerequisite to TD3's own core and fixed-batch verification.
 
 Outcome: both independent reviewers agreed to publish a material PR with these revisions; no unresolved blocking finding. This is editorial and simulated teaching evidence only, not evidence of learner mastery or successful training.
+
+## Current review candidate · 2026-11-09
+
+The earlier review/build paragraphs above describe the original November 8 version, not the current readiness state. The group subsequently agreed on the revised SGD-first design; that agreement does not constitute review approval of the new implementation. See the [teaching-feedback audit](PR1-teaching-feedback-audit.md) and [executable candidate](PR1-consensus-review.md).
+
+Before teaching from the candidate, follow the forward → backward → step split. Ask the learner to predict whether the action point or a parameter will move, then show the corresponding phase. At Actor backward, distinguish Q1's nonzero action derivative from absent Q1 parameter gradients; only the later Actor step moves the policy action. In the Critic example, sum the two samples' contributions to one shared weight instead of treating each output as an independently adjustable table entry.
+
+The runnable reference contains complete AI-written update code for reviewer audit. Keep it separate from the learner task: the learner should still write the designated target/loss/delay/Polyak core before comparing against the reference. Browser navigation selects analytic trace frames; actual framework snapshot restoration is demonstrated by the Python reference, not by browser frame selection.

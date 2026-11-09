@@ -4,6 +4,14 @@
 
 机械臂能用任意大小的合法推力。**TD3 要解决的是，怎样从试过的推力和环境反馈里，学出下一次该怎么推。** Critic 先学会估计一次推力的回报，Actor 再用这个估计调整自己的输出。讲义先讲这两者怎样合作，再用代码和滑块例子解释为什么训练目标需要控制变化速度。
 
+### Reading map · challenge → lineage → execution
+
+The challenge is to learn a useful continuous action from real transitions, even though the Actor has no supervised “best-action” label. The Critic learns a return estimate; its action derivative then supplies the Actor's local improvement direction. An estimated improvement is not a guarantee of better real return.
+
+**DPG → DDPG → TD3:** DPG supplies the deterministic policy gradient; DDPG uses neural Actor/Critic networks, replay and target networks; TD3 retains that setup and adds twin-target minimum, target policy smoothing and delayed Actor/target updates. The [full comparison](#dpgddpg-和-td3-对照) is optional on a first read.
+
+Read the environment and mechanism first (§0–1), then the complete pseudocode (§2), then only the block answering your current question (§3). Use the debugger for the detailed numeric trace and finish with inference (§5). No need to memorize all weights or study every tensor on the first pass.
+
 ## 0 · 先看环境和一步 TD 更新
 
 机械臂沿一条直线推滑块。这里的**环境（environment）**就是模拟滑块的程序。训练程序选择一次推力，把它交给 `env.step(a)`。环境按运动规则算出滑块的新位置和速度，再按奖励规则给出这一步的奖励，并报告这局是否结束。新一局开始时，`env.reset()` 提供起始观察。
@@ -45,7 +53,7 @@ TD3 用的是同样的 **一步 TD 目标（one-step TD target）**，但要训�
 | --- | --- |
 | **02/03 交互** | 环境实际执行动作，返回观察、即时奖励和终止标记。训练程序把经验存进 replay。 |
 | **05 Target 1** | 训练程序把记录中的 reward 和从下一状态开始的估值合成一步 TD 目标。 |
-| **06 Critic 1** | 两个 Critic 对原来执行的 `(s, a)` 做预测，用上一步算出的 TD 目标做回归。 |
+| **Critic 1 · forward / backward / step** | 两个 Critic 对原来执行的 `(s, a)` 做预测，用上一步算出的 TD 目标做回归。 |
 
 读完原理后，可以用[完整训练流程](#2--完整训练流程)定位代码，再按[逐块走读](#3--逐个-block-走读)跟一条实际经验。想了解三代算法的演进，可以单独读[DPG、DDPG 和 TD3 对照](#dpgddpg-和-td3-对照)。[TD3 Training Debugger](training-debugger.html) · [P4 实践与验收](../rl-control-practice.md#p4--td3旧数据怎样给-actor-一个方向)
 
@@ -82,12 +90,12 @@ TD3 用的是同样的 **一步 TD 目标（one-step TD target）**，但要训�
 | [Initialize](#initialize) | 1–6 | 01 初始化 |
 | [Collect](#collect) | 8–16 | 02/03 交互 |
 | [Sample](#sample) | 18–21 | 04 抽取 batch |
-| [TD target](#td-target) | 22–27 | 05/08 Target |
-| [Critic update](#critic-update) | 29–34 | 06/09 Critic |
-| [Delay gate](#delay-gate) | 36–37 | 07 跳过 Actor |
-| [Actor update](#actor-update) | 38–44 | 10 Actor 梯度 |
-| [Actor step](#actor-step) | 46–48 | 11 Actor 写回 |
-| [Target sync](#target-sync) | 50–55 | 12 同步 targets |
+| [TD target](#td-target) | 22–27 | Target 1 / Target 2 |
+| [Critic update](#critic-update) | 29–34 | Critic forward → backward → step（两轮） |
+| [Delay gate](#delay-gate) | 36–37 | Delay gate · 跳过 Actor |
+| [Actor update](#actor-update) | 38–44 | Actor forward → backward |
+| [Actor step](#actor-step) | 46–48 | Actor step · 写回 |
+| [Target sync](#target-sync) | 50–55 | Target sync · 同步 targets |
 
 第 21 行从 replay 抽一批经验。`S, A` 的同一行是 Critic 要打分的原状态和实际动作，`R, S_next, D` 的同一行是这次动作得到的 reward、到达状态和终止标记。同一条经验在这五组变量中的行号一致。
 
@@ -159,7 +167,7 @@ TD3 用的是同样的 **一步 TD 目标（one-step TD target）**，但要训�
 
 ## 3 · 逐个 block 走读
 
-每块先解释它解决哪一个训练问题，再贴相关代码。滑块数据只在需要区分两个量或解释一个结果时出现。行号沿用完整训练流程，Debugger 步号用于核对执行。
+每块先解释它解决哪一个训练问题，再贴相关代码。滑块数据只在需要区分两个量或解释一个结果时出现。行号沿用完整训练流程，Debugger 的阶段名用于核对执行（新增细分阶段后，不依赖旧步号）。
 
 ### Initialize
 
@@ -220,7 +228,7 @@ TD3 用的是同样的 **一步 TD 目标（one-step TD target）**，但要训�
 
 ### TD target
 
-要为原来那次推力估计回报，当步 reward 已经知道，剩下的回报要从到达状态开始算。两个时点各有一个动作，先分清它们，才知道每个 Q 分数在评价哪一步（Debugger 05/08）。
+要为原来那次推力估计回报，当步 reward 已经知道，剩下的回报要从到达状态开始算。两个时点各有一个动作，先分清它们，才知道每个 Q 分数在评价哪一步（Debugger Target 1 / Target 2）。
 
 ```text
 22 │     # TD target · 用真实奖励和下一步的估值，为每条经验构造训练标签 Y
@@ -246,7 +254,7 @@ TD3 用的是同样的 **一步 TD 目标（one-step TD target）**，但要训�
 
 ### Critic update
 
-两个 Critic 用同一批一步 TD 目标做回归。每个 Critic 的参数会同时影响多条样本，所以一条样本希望预测往下，整批更新仍可能让它往上（Debugger 06/09）。
+两个 Critic 用同一批一步 TD 目标做回归。每个 Critic 的参数会同时影响多条样本，所以一条样本希望预测往下，整批更新仍可能让它往上（Debugger Critic forward / backward / step）。
 
 ```text
 29 │     # Critic update · 让两个 online Critic 对历史动作的预测拟合同一个 Y
@@ -263,7 +271,7 @@ TD3 用的是同样的 **一步 TD 目标（one-step TD target）**，但要训�
 
 ### Delay gate
 
-Actor 依赖 Critic 给方向。让 Critic 先多做几次拟合，Actor 就不会跟着每一次评分变化立即调整（Debugger 07）。
+Actor 依赖 Critic 给方向。让 Critic 先多做几次拟合，Actor 就不会跟着每一次评分变化立即调整（Debugger Delay gate）。
 
 ```text
 36 │     # Delay gate · 按 Critic 更新次数决定何时更新 Actor 和 target networks
@@ -274,7 +282,7 @@ Actor 依赖 Critic 给方向。让 Critic 先多做几次拟合，Actor 就不�
 
 ### Actor update
 
-Critic 回归问的是「原来的动作值多少」，Actor 更新问的是「现在提议的动作该怎么改」。用同一状态重新提议动作，才能在那个动作附近求评分的斜率（Debugger 10）。
+Critic 回归问的是「原来的动作值多少」，Actor 更新问的是「现在提议的动作该怎么改」。用同一状态重新提议动作，才能在那个动作附近求评分的斜率（Debugger Actor forward / backward）。
 
 ```text
 38 │         # Actor update · 用 Q1 对当前 Actor 提议的动作打分，把梯度传回 Actor
@@ -292,7 +300,7 @@ Critic 回归问的是「原来的动作值多少」，Actor 更新问的是「�
 
 ### Actor step
 
-Backward 给出参数该往哪个方向变，optimizer 才实际写回参数。用同一个状态重新算推力，可以看出这次参数更新改变了什么（Debugger 11）。
+Backward 给出参数该往哪个方向变，optimizer 才实际写回参数。用同一个状态重新算推力，可以看出这次参数更新改变了什么（Debugger Actor step）。
 
 ```text
 46 │         # Actor step · 用刚算出的梯度写回 Actor 参数
@@ -304,7 +312,7 @@ Backward 给出参数该往哪个方向变，optimizer 才实际写回参数。�
 
 ### Target sync
 
-到这里，Critic 和 Actor 都已经更新过。下一轮还要靠网络估计「做完这次推力之后，还能拿到多少回报」。**这一块负责把本轮学到的参数，少量交给下一轮负责估值的副本**（Debugger 12）。
+到这里，Critic 和 Actor 都已经更新过。下一轮还要靠网络估计「做完这次推力之后，还能拿到多少回报」。**这一块负责把本轮学到的参数，少量交给下一轮负责估值的副本**（Debugger Target sync）。
 
 ```text
 50 │         # Target sync · 把新 online 参数少量混入副本，让下次算 Y 的参数缓慢跟进
@@ -341,8 +349,8 @@ Backward 给出参数该往哪个方向变，optimizer 才实际写回参数。�
 Debugger 在同一批两条滑块经验上做两轮更新。每一步会高亮当前代码，表格显示这些行读到和算出的 tensor。 [打开 Training Debugger](training-debugger.html)
 
 1. **05 Target 1** 切换两条经验，观察终止标记为什么让第二条只保留即时奖励。
-2. **10 Actor 梯度 → 11 Actor 写回** 对同一个状态比较推力输出，核对算梯度和写回参数分别发生在哪一步。
-3. **12 同步 targets** 先看一个 bias 怎样向 online 参数靠近，再固定经验和噪声，只换同步前后的副本，对比一步 TD 目标。
+2. **Actor forward → backward → Actor step · 写回** 对同一个状态比较推力输出，核对算梯度和写回参数分别发生在哪一步。
+3. **Target sync · 同步 targets** 先看一个 bias 怎样向 online 参数靠近，再固定经验和噪声，只换同步前后的副本，对比一步 TD 目标。
 
 ### 对照 tensor 时用到的模型
 

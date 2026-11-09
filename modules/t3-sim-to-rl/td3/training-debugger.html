@@ -87,7 +87,7 @@ nav .index{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.76rem
 <ol>
 <li><strong>02/03 交互 · 环境执行动作。</strong> 滑块原来的位置和速度叫 <code>s</code>。训练程序把推力 <code>a</code> 交给环境。环境返回新的位置和速度 <code>s_next</code>、即时奖励 <code>r</code> 和是否到终点。这些量一起存进 replay buffer。</li>
 <li><strong>05 Target 1 · 构造一步 TD 目标。</strong> TD(0) 用即时奖励加折扣后的下一步估值，作为当前预测的训练目标。TD3 从 replay 读取即时奖励 <code>r</code>，用 target networks（online 网络的参数副本）从 <code>s_next</code> 算下一步的 Q 估值。终止时只保留即时奖励。代码把整批算出的目标记作 <code>Y</code>。</li>
-<li><strong>06 Critic 1 · 用一步 TD 目标做回归。</strong> 两个 Critic 都对原来实际执行的那一推预测回报。第 05 步算出的目标给它们提供同一个回归标签。</li>
+<li><strong>Critic 1 · forward / backward / step · 用一步 TD 目标做回归。</strong> 两个 Critic 都对原来实际执行的那一推预测回报。Target 1 算出的目标给它们提供同一个回归标签。</li>
 </ol>
 </section>
 <p>点击阶段，或用左右方向键逐步走查。</p>
