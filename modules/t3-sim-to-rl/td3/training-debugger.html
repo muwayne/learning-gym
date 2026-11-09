@@ -196,7 +196,16 @@ nav .index{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.76rem
 <thead><tr><th scope="col">Tensor / 值</th><th scope="col">Shape</th><th scope="col">计算结果</th><th scope="col">用途</th></tr></thead>
 <tbody id="tensors"></tbody>
 </table></div>
-<p class="hint" id="hint"></p>
+<section id="gradient-detail" hidden aria-label="动作与 Q 曲线">
+<h3>Q1(s,a) 与动作方向</h3>
+<svg viewBox="0 0 520 270" role="img" aria-label="固定状态下的 Q1 曲线、局部切线与动作点" style="width:100%;max-height:270px">
+<polyline id="q-curve" fill="none" stroke="#126578" stroke-width="3"/>
+<line id="local-slope" stroke="#ad650c" stroke-width="3"/>
+<circle id="old-action-point" r="8" fill="none" stroke="#536777" stroke-width="2"/>
+<circle id="action-point" r="5" fill="#126578"/>
+<text x="30" y="250">a = −1</text><text x="450" y="250">a = 1</text>
+</svg><p id="gradient-caption"></p></section>
+<p id="hint"></p>
 </section>
 <details class="parameters">
 <summary>网络参数 · 当前阶段之后</summary>
@@ -400,6 +409,14 @@ function makeTrace() {
     const q1 = criticStep(models.q1, batch, target.y);
     const q2 = criticStep(models.q2, batch, target.y);
     const loss = mean(q1.errors.map((error, i) => error ** 2 + q2.errors[i] ** 2));
+    add("Update " + update + " · Critic forward", "先算预测和 loss，不写参数", "Critic forward " + update,
+      "同一 replay batch，两个 online Critics 拟合固定 Y。", "Q(S,A) → loss_c",
+      [["loss_c", "scalar", loss, "参数和梯度尚未更新"]], "下一步 backward 才产生参数梯度。");
+    add("Update " + update + " · Critic backward", "逐样本贡献汇入共享权重", "Critic backward " + update,
+      "展示两条经验对同一个 Q1 action weight 的梯度贡献；不是每条样本各有一套权重。", "2(Q−Y)/B × a → shared weight gradient",
+      [["Q1 action-weight contributions", "[2, 1]", col(q1.errors.map((e,i) => 2*e/batch.length*batch[i].a)), "逐行贡献；求和得到 dW1[action]"],
+       ["dW1 / dW2", "[2, 4]", [q1.gradient.w,q2.gradient.w], "backward 只产生梯度"],
+       ["db1 / db2", "[2]", [q1.gradient.b,q2.gradient.b], "参数保持不变"]], "下一步 SGD step 才写回参数。");
     models.q1 = q1.updated;
     models.q2 = q2.updated;
     add("Update " + update + " · Critic", "做回归，写回两个 online Critics", "Critic " + update,
@@ -424,6 +441,10 @@ function makeTrace() {
       continue;
     }
     const actor = actorStep(models.actor, models.q1, batch.map((row) => row.s));
+    add("Update 2 · Actor forward", "当前策略重新提议动作", "Actor forward",
+      "Q1 参数冻结，但保留对 action 的导数。", "S → Actor(S) → Q1 → loss_a",
+      [["Actor(S)", "[2, 1]", col(actor.a), "动作还没有变化"],
+       ["loss_a", "scalar", -mean(actor.q), "负平均 Q1"]], "forward 不产生参数更新。");
     add("Update 2 · Actor backward", "让 Critic 提供动作方向", "Actor 梯度",
       "Actor 用 S 重新提议动作。固定 Q1 的 W、b，计算 Q1 对输入动作的导数，然后通过 tanh 和 affine 层把梯度传到 Actor 参数。",
       "Actor weights → proposed action → Q1(S, action) → −mean(Q1)",
@@ -434,6 +455,9 @@ function makeTrace() {
        ["loss_a", "scalar", -mean(actor.q), "负的平均估计回报"],
        ["∂loss_a/∂Q1", "[2, 1]", col(actor.q.map(() => -1 / actor.q.length)), "负均值给每个 Q 分数的梯度是 −1/B"],
        ["∂Q1/∂a", "[2, 1]", col(actor.dqDa), "w_action + 2 × w_quadratic × action"],
+       ["∂loss_a/∂a", "[2, 1]", col(actor.dqDa.map(v => -v / batch.length)), "−(1/B) × ∂Q1/∂a"],
+       ["Q1 parameter gradients", "[1, 4] / [1]", "None", "冻结且清空：不计算 Q1 参数梯度"],
+       ["Actor dW / db", "[1, 2] / [1]", [actor.gradient.w,[actor.gradient.b]], "Actor 实测解析梯度"],
        ["∂loss_a/∂z", "[2, 1]", col(actor.dLossDz), "经过 tanh 和 batch mean 后的梯度"]],
       "梯度通过 Q1 对动作的计算。这里还没有执行 Actor optimizer step。");
     models.actor = actor.updated;
@@ -481,6 +505,9 @@ function mountDebugger(doc, frames) {
     Replay: ["    # Sample ·", "    S, A, R, S_next, D ="],
     Target: ["    # TD target ·", "        Y ="],
     Critic: ["    # Critic update ·", "    critic_updates += 1"],
+    "Critic forward": ["    loss_c =", "    loss_c ="],
+    "Critic backward": ["    critic_optimizer.zero_grad", "    loss_c.backward()"],
+    "Actor forward": ["        freeze(Q1", "        actor_optimizer.zero_grad"],
     "Delay gate": ["    # Delay gate ·", "    if critic_updates %"],
     "Actor backward": ["        # Actor update ·", "        loss_a.backward()"],
     "Actor step": ["        # Actor step ·", "        unfreeze(Q1"],
@@ -489,7 +516,7 @@ function mountDebugger(doc, frames) {
   };
   const format = (value) => Array.isArray(value)
     ? "[" + value.map(format).join(", ") + "]"
-    : Number(value.toFixed(6)).toString();
+    : typeof value === "string" ? value : Number(value.toFixed(6)).toString();
   function node(tag, label, className) {
     const el = doc.createElement(tag);
     if (className) el.className = className;
@@ -583,6 +610,34 @@ function mountDebugger(doc, frames) {
       format(oldBias) + " + " + format(config.tau) + " × (" + format(onlineBias) +
       " − " + format(oldBias) + ") ≈ " + format(newBias);
   }
+  function renderGradient(frame, prior) {
+    const panel = get("gradient-detail");
+    const visible = /Actor (forward|backward|step)$/.test(frame.phase);
+    panel.hidden = !visible;
+    if (!visible) return;
+    const state = [0.3, 0];
+    const model = frame.models.q1;
+    const a = actorForward(frame.models.actor, state);
+    const oldA = actorForward(prior.actor, state);
+    const x = a => 30 + (a+1)*230;
+    const y = q => 180-90*q;
+    const points = Array.from({length:101}, (_,i) => {
+      const a = -1+i/50;
+      return x(a)+","+y(score(model,state,a));
+    }).join(" ");
+    get("q-curve").setAttribute("points", points);
+    get("action-point").setAttribute("cx",x(a));
+    get("action-point").setAttribute("cy",y(score(model,state,a)));
+    get("old-action-point").setAttribute("cx",x(oldA));
+    get("old-action-point").setAttribute("cy",y(score(model,state,oldA)));
+    const slope = model.w[2]+2*model.w[3]*a;
+    get("local-slope").setAttribute("x1",x(a-.18));
+    get("local-slope").setAttribute("x2",x(a+.18));
+    get("local-slope").setAttribute("y1",y(score(model,state,a)-.18*slope));
+    get("local-slope").setAttribute("y2",y(score(model,state,a)+.18*slope));
+    get("gradient-caption").textContent = "固定 s=[0.3,0]：实心点 a="+format(a)+
+      "；Q1 局部斜率="+format(slope)+"。空心点是上一帧；forward/backward 不移动动作，step 才移动。";
+  }
   const buttons = frames.map((frame, i) => {
     const button = node("button", "", "");
     button.type = "button";
@@ -603,6 +658,7 @@ function mountDebugger(doc, frames) {
     renderCode(frame.phase);
     renderTarget(frame.targetDetail);
     renderSync(frame.phase, prior, frame.models);
+    renderGradient(frame, prior);
     get("hint").textContent = frame.hint;
     get("prev").disabled = current === 0;
     get("next").disabled = current === frames.length - 1;

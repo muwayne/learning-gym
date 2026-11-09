@@ -457,3 +457,9 @@ TD3 保留 DDPG 的 replay、深度网络和参数副本。第 12–13 行在 ta
 19 │         step_minimize(Actor, -mean(Q1(S, Actor(S))))
 20 │         soft_update_pairs((Actor_target, Actor), (Q1_target, Q1), (Q2_target, Q2), τ)
 ```
+
+## 7 · Executable review reference
+
+The [PR1 consensus delta](PR1-consensus-review.md) maps the agreed design to code and explicitly lists remaining UI work. The [PyTorch reference](reference/debugger.py) implements real autograd, no-momentum SGD, phase stepping, deep snapshots, restore and comparison forks. The browser remains a standalone analytic trace; it is not a PyTorch frontend.
+
+The debugger now separates forward, backward and optimizer step, showing a fixed-state Q1 curve and shared-weight gradient contributions. The documented 0.058829 and 0.031888 fixtures have been checked against both implementations with the full configuration recorded in the review note. These are teaching fixtures, not training or learning-effect evidence.
