@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TD3 Training Debugger</title>
+<style>
+:root{color-scheme:light dark;--bg:#f6f8fb;--panel:#fff;--ink:#172740;--muted:#506278;--line:#dbe4ef;--accent:#075d86;--active:#e4f3fa;--change:#08704d;--warm:#f5eddf}
+@media(prefers-color-scheme:dark){:root{--bg:#131d29;--panel:#1b2a3a;--ink:#e4edf8;--muted:#b1c3d6;--line:#354a60;--accent:#81d5f8;--active:#183b50;--change:#88deb7;--warm:#403829}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 system-ui,-apple-system,sans-serif}
+.shell{max-width:1240px;margin:auto;padding:30px clamp(14px,4vw,46px) 54px}
+.eyebrow{font-size:.73rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:750}
+h1{font-size:clamp(1.8rem,5vw,3rem);letter-spacing:-.035em;line-height:1.1;margin:.25em 0}h2{margin:0;font-size:clamp(1.3rem,3vw,1.85rem);line-height:1.25}h3{margin:.2em 0 .55em;font-size:1rem}
+p{margin:.6em 0;color:var(--muted)}a{color:var(--accent)}code,pre,.shape,.value{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.89rem}
+header{padding-bottom:18px;border-bottom:1px solid var(--line)}.metrics{display:flex;flex-wrap:wrap;gap:7px 16px;margin-top:13px;color:var(--muted);font-size:.85rem}.metrics span{white-space:nowrap}
+.reading-guide{margin-top:18px;padding:clamp(12px,2.5vw,20px);background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.reading-guide h2{font-size:1.2rem}.reading-guide ol{padding-left:1.4em;margin:.6em 0}.reading-guide li+li{margin-top:.5em}
+.layout{display:grid;grid-template-columns:205px minmax(0,1fr);gap:20px;margin-top:20px}
+nav{display:grid;gap:5px;align-content:start}button{font:inherit;cursor:pointer;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px}
+button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+nav button{text-align:left;display:flex;gap:9px;align-items:baseline;padding:5px 9px;font-size:.86rem}
+nav button[aria-current="step"],.next{background:var(--active);color:var(--accent);border-color:var(--accent);font-weight:700}
+nav .index{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.76rem}button:disabled{opacity:.46;cursor:default}
+.stage,.model{background:var(--panel);border:1px solid var(--line);border-radius:12px}.stage{padding:clamp(12px,3vw,24px)}.controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px}.counter{margin-left:auto;color:var(--muted);font-variant-numeric:tabular-nums}
+.phase{margin-bottom:5px}.flow{margin:14px 0;padding:10px 12px;background:var(--active);border-radius:8px;color:var(--ink);overflow:auto;white-space:pre-wrap}
+.rail{margin:14px 0 0;width:100%;height:auto;max-width:440px}.rail text{fill:var(--muted);font:11px system-ui}.rail line{stroke:var(--line);stroke-width:2}.rail .goal{stroke:var(--change);stroke-dasharray:3 3}.rail circle{fill:var(--accent)}
+.scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;text-align:left;font-size:.87rem}th,td{padding:8px 7px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted);font-weight:650}td:first-child{font-weight:650;white-space:nowrap}.value{white-space:pre-wrap;min-width:145px}.shape{white-space:nowrap;color:var(--accent)}td:last-child{min-width:118px;color:var(--muted)}
+.hint{background:var(--warm);padding:8px 12px;border-radius:8px;margin:14px 0 0}.parameters{margin-top:15px}.parameters summary{cursor:pointer;font-weight:700}.parameter-note{font-size:.84rem}
+.models{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}.model{min-width:0;padding:9px 11px}.model pre{margin:0;overflow:auto}.model.changed{border-color:var(--change)}.delta{color:var(--change);font-size:.76rem}.model p{font-size:.78rem;margin:.25em 0}
+.target-detail{margin:16px 0;padding:clamp(10px,2.5vw,18px);background:var(--bg);border:1px solid var(--line);border-radius:12px}
+.target-detail h3{font-size:1.12rem;margin:0}.target-detail p{font-size:.86rem}
+.row-choice{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.row-choice button{font-size:.82rem;padding:5px 8px}
+.row-choice button[aria-pressed="true"]{background:var(--active);border-color:var(--accent);color:var(--accent);font-weight:700}
+.sample-track{margin:12px 0;padding:8px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel)}
+.sample-track svg{width:100%;max-width:680px;height:auto;display:block;margin:auto}
+.sample-track text{font:15px system-ui;fill:var(--muted)}.sample-track .replayed{stroke:var(--accent);stroke-width:4}
+.sample-track .start{stroke:var(--accent);stroke-width:3;fill:var(--panel)}.sample-track .arrival{fill:var(--accent)}
+.sample-track .track{stroke:var(--line);stroke-width:4}.sample-track .finish{stroke:var(--change);stroke-width:2;stroke-dasharray:4 4}
+.sample-track figcaption{font-size:.84rem;color:var(--muted);text-align:center}
+.sync-values{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0;text-align:center}
+.sync-values div{padding:6px;border:1px solid var(--line);border-radius:7px;overflow-wrap:anywhere}
+.sync-values dt{font-size:.78rem;color:var(--muted)}.sync-values dd{margin:0;min-width:0}
+.sync-values .synced{border-color:var(--accent);background:var(--active)}
+#sync-equation{margin-top:9px;overflow-wrap:anywhere}
+.target-paths{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);gap:10px}
+.target-node,.target-result{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:10px 12px;min-width:0}
+.target-node h4,.target-result h4{margin:0;font-size:.92rem}.target-node .value,.target-result .value{overflow-wrap:anywhere;min-width:0}
+.target-node details{color:var(--muted);font-size:.8rem}.target-node summary{cursor:pointer}
+.score-pair{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.score-pair .value{padding:2px 7px;border:1px solid var(--line);border-radius:6px;margin:0}
+.score-pair [data-chosen="true"]{border-color:var(--accent);background:var(--active)}
+.target-join{text-align:center;font-weight:700}
+.model-path{display:grid;gap:4px}.target-arrow{text-align:center;color:var(--accent);font-size:1.1rem;line-height:1}
+.target-result{margin-top:10px;border-color:var(--accent);background:var(--active)}
+.target-result .value{font-weight:700}.target-detail p:last-child{margin-bottom:0}
+.execution{margin:14px 0}.execution h3{margin-bottom:0}.execution p{font-size:.82rem}
+.code-panel{max-height:15rem;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:8px}
+.code-lines{margin:0;padding:5px 0;min-width:max-content;line-height:1.65}
+.code-line{display:block;padding:2px 10px 2px 4px}
+.code-line[aria-current="step"]{background:var(--active);border-left:3px solid var(--accent);padding-left:1px}
+.line-number{display:inline-block;width:3.2ch;margin-right:1.2ch;text-align:right;color:var(--muted);user-select:none}
+.shape-guide{margin:14px 0 8px;padding:9px 12px;border:1px solid var(--line);border-radius:8px}
+.shape-guide p{font-size:.84rem;margin:.2em 0}.shape-guide strong{color:var(--ink)}
+@media(max-width:730px){.layout{grid-template-columns:minmax(0,1fr);gap:12px}nav{display:flex;overflow:auto;padding:2px 2px 6px}nav button{flex:none}.shell{padding-top:17px}}
+@media(max-width:450px){.models,.target-paths{grid-template-columns:minmax(0,1fr)}.controls button{padding:5px 9px}.counter{margin-left:0}}
+</style>
+</head>
+<body>
+<main class="shell">
+<header>
+<div class="eyebrow">Learning Gym · T3 S02 / P4</div>
+<h1>TD3 Training Debugger</h1>
+<p>对照同一条滑轨上的两条经验，看 Critic 怎么拟合一步 TD 目标、Actor 怎么更新，以及 target 副本怎么跟上。</p>
+<p><a href="README.md">TD3 讲义</a> · <a href="https://proceedings.mlr.press/v80/fujimoto18a/fujimoto18a.pdf#page=6">原论文 Algorithm 1（PDF 第 6 页）</a></p>
+<section class="reading-guide" aria-labelledby="reading-guide-title">
+<h2 id="reading-guide-title">先看环境怎么给奖励，再看 Critic 怎么学</h2>
+<details open>
+<summary>滑块环境的完整设定</summary>
+<ul>
+<li>起点 <code>[p, v] = [0.3, 0]</code>，分别是位置和速度。推力 <code>a</code> 的范围是 <code>[-1, 1]</code>，正值朝终点推。</li>
+<li>环境先算 <code>v_next = 0.5v + 0.5a</code>，再算 <code>p_next = p + v_next</code>。</li>
+<li>若 <code>p_next ≥ 0.95</code>，本步 reward 为 <code>+1</code>，episode 结束。其余每步 reward 都为 <code>−0.1</code>，无论速度或剩余距离。这个例子没有额外的步数上限。</li>
+</ul>
+<p>第一次推 0.6 到达 <code>[0.6, 0.3]</code>，reward 为 −0.1。第二次推 0.5 到达 <code>[1.0, 0.4]</code>，reward 为 +1 并终止。</p>
+</details>
+<p><strong>奖励（reward）</strong>是环境给这一次移动的分数。<strong>回报（return）</strong>把这一步和之后的奖励加起来，越往后的奖励权重越小。Critic 用 <code>Q(s, a)</code> 预测一次推力的回报。</p>
+<ol>
+<li><strong>02/03 交互 · 环境执行动作。</strong> 滑块原来的位置和速度叫 <code>s</code>。训练程序把推力 <code>a</code> 交给环境。环境返回新的位置和速度 <code>s_next</code>、即时奖励 <code>r</code> 和是否到终点。这些量一起存进 replay buffer。</li>
+<li><strong>05 Target 1 · 构造一步 TD 目标。</strong> TD(0) 用即时奖励加折扣后的下一步估值，作为当前预测的训练目标。TD3 从 replay 读取即时奖励 <code>r</code>，用 target networks（online 网络的参数副本）从 <code>s_next</code> 算下一步的 Q 估值。终止时只保留即时奖励。代码把整批算出的目标记作 <code>Y</code>。</li>
+<li><strong>06 Critic 1 · 用一步 TD 目标做回归。</strong> 两个 Critic 都对原来实际执行的那一推预测回报。第 05 步算出的目标给它们提供同一个回归标签。</li>
+</ol>
+</section>
+<p>点击阶段，或用左右方向键逐步走查。</p>
+<div class="metrics" aria-label="固定实验设置">
+<span>Observation: [position, velocity]</span><span>Action: [-1, 1]</span>
+<span>Batch: 2</span><span>SGD · γ=0.9 · τ=0.1 · delay=2</span>
+</div>
+</header>
+<div class="layout">
+<nav id="steps" aria-label="训练阶段"></nav>
+<div>
+<section class="stage" aria-labelledby="step-title">
+<div class="controls"><button id="reset" type="button">回到起点</button><button id="prev" type="button">上一步</button><button id="next" class="next" type="button">下一步</button><span class="counter" id="counter"></span></div>
+<div class="phase eyebrow" id="phase"></div>
+<h2 id="step-title" aria-live="polite"></h2>
+<p id="description"></p>
+<svg class="rail" id="rail" viewBox="0 0 430 67" role="img" aria-labelledby="rail-title" hidden>
+<title id="rail-title">滑块位置</title>
+<line x1="24" y1="34" x2="401" y2="34"></line>
+<line class="goal" x1="350" y1="14" x2="350" y2="46"></line>
+<circle id="slider" cx="24" cy="34" r="8"></circle>
+<text x="24" y="60">0</text><text x="322" y="60">goal = 0.95</text>
+</svg>
+<section id="target-detail" class="target-detail" aria-labelledby="target-title" hidden>
+<h3 id="target-title">这一步怎样构造 TD 目标</h3>
+<p>下方滑轨回放 02/03 步已经发生的移动。这里从 replay 读取那一步的奖励和到达状态，再由网络估计之后的回报。两部分合成一步 TD 目标，留给下一步 Critic 回归。</p>
+<div class="row-choice" role="group" aria-label="选择 replay 样本">
+<button id="target-row-0" type="button" aria-pressed="true">经验 1 · 还能继续</button>
+<button id="target-row-1" type="button" aria-pressed="false">经验 2 · 已终止</button>
+</div>
+<figure class="sample-track">
+<svg viewBox="0 0 540 90" role="img" aria-labelledby="target-rail-title">
+<title id="target-rail-title">选中经验在滑轨上的实际移动</title>
+<defs><marker id="move-tip" viewBox="0 0 8 8" markerWidth="3" markerHeight="3" refX="5" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="var(--accent)"></path></marker></defs>
+<text x="34" y="21">本步在环境里实际发生的移动</text>
+<line class="track" x1="34" x2="506" y1="46" y2="46"></line>
+<line class="finish" x1="482.4" x2="482.4" y1="31" y2="64"></line>
+<text x="34" y="79">0</text><text x="482.4" y="79" text-anchor="end">终点 0.95</text>
+<line class="replayed" id="target-motion" y1="46" y2="46" marker-end="url(#move-tip)"></line>
+<circle class="start" id="target-start" cy="46" r="6"></circle>
+<circle class="arrival" id="target-arrival" cy="46" r="7"></circle>
+</svg>
+<figcaption id="target-transition"></figcaption>
+</figure>
+<div class="target-paths">
+<div class="target-node">
+<h4>环境给出的即时奖励</h4>
+<p class="value" id="target-reward"></p>
+<p class="value" id="target-observation"></p>
+<p class="value" id="target-mask"></p>
+</div>
+<div class="model-path">
+<div class="target-node">
+<h4>① Target Actor · 在到达位置提议下一动作</h4>
+<p class="value" id="target-action"></p>
+<details><summary>展开看 smoothing 怎么改变动作</summary><p class="value" id="target-noise"></p></details>
+</div>
+<div class="target-arrow" aria-hidden="true">↓</div>
+<div class="target-node">
+<h4>② Target Critics · 估计这个提议的未来回报</h4>
+<div class="score-pair"><p class="value" id="target-score-1"></p><p class="value" id="target-score-2"></p></div>
+</div>
+</div>
+</div>
+<p class="target-join" id="target-join"></p>
+<div class="target-result" aria-live="polite">
+<h4>③ 一步 TD 目标 = 实际奖励 + 折扣后的未来估值</h4>
+<p class="value" id="target-equation"></p>
+<p id="target-next"></p>
+</div>
+</section>
+<section id="sync-detail" class="target-detail" aria-labelledby="sync-title" hidden>
+<h3 id="sync-title">一个参数怎样从旧 target 向 online 靠近</h3>
+<p>第 52 行选出 <code>Q2</code> 与 <code>Q2_target</code> 这一对，第 53 行把各自的参数按顺序配对。这里只看其中的 bias。</p>
+<figure class="sample-track">
+<svg viewBox="0 0 540 47" aria-hidden="true">
+<line class="track" x1="34" y1="23" x2="506" y2="23"></line>
+<line class="replayed" id="sync-distance" x1="34" y1="23" y2="23"></line>
+<circle class="start" cx="34" cy="23" r="6"></circle>
+<circle class="start" cx="506" cy="23" r="6"></circle>
+<circle class="arrival" id="sync-marker" cy="23" r="7"></circle>
+</svg>
+<dl class="sync-values">
+<div><dt>旧 target</dt><dd class="value" id="sync-old"></dd></div>
+<div class="synced"><dt>写回后的 target</dt><dd class="value" id="sync-new"></dd></div>
+<div><dt>当前 online</dt><dd class="value" id="sync-online"></dd></div>
+</dl>
+<figcaption id="sync-equation"></figcaption>
+</figure>
+<p>第 55 行只写回副本。下方表格用同步前后的副本各做一次前向计算，比较同一条经验的一步 TD 目标。</p>
+</section>
+<pre class="flow" id="flow"></pre>
+<section class="execution" aria-labelledby="execution-title">
+<h3 id="execution-title">当前执行位置</h3>
+<p id="code-caption"></p>
+<div id="code-panel" class="code-panel" tabindex="0" aria-label="当前步骤对应的伪代码">
+<pre id="code-lines" class="code-lines"></pre>
+</div>
+</section>
+<div class="shape-guide" aria-label="Tensor shape 读法">
+<p><strong>行</strong>表示一个样本。这里的 <code>B=2</code> 表示同一个 batch 有两条经验。</p>
+<p><strong>列</strong>表示每条样本的特征。观察 <code>[B, 2]</code> 依次是位置 <code>p</code>、速度 <code>v</code>；Critic 输入 <code>[B, 4]</code> 依次是 <code>p, v, a, a²</code>。</p>
+<p>动作、reward、Q 分数或训练目标都各占一列，形状为 <code>[B, 1]</code>。</p>
+</div>
+<div class="scroll"><table aria-label="当前阶段的输入与输出">
+<thead><tr><th scope="col">Tensor / 值</th><th scope="col">Shape</th><th scope="col">计算结果</th><th scope="col">用途</th></tr></thead>
+<tbody id="tensors"></tbody>
+</table></div>
+<p class="hint" id="hint"></p>
+</section>
+<details class="parameters">
+<summary>网络参数 · 当前阶段之后</summary>
+<p class="parameter-note">W 的 shape 是 [输出个数, 输入特征数]，与数据表的 [样本数, 特征数] 是两种读法。W 的列按标出的顺序各给一个输入特征加权，b 给结果加一个常数。绿色边框表示本步更新。数值最多显示六位小数。</p>
+<div class="models" id="models"></div>
+</details>
+</div>
+</div>
+<p><a href="README.md">回到 TD3 讲义</a> · 固定教学 trace，计算用小型模型和 SGD。两轮更新只用于展示数据和梯度路径。<br>想单独看 <code>mean</code>、<code>min</code> 和 <code>clip</code> 的反传规则，可打开 <a href="../../a1-transformer/autograd-primer.html">A1 · Autograd 讲义</a>。</p>
+</main>
+<script id="training-pseudocode" type="text/plain">
+# Initialize · 建立可训练网络、用于算标签的副本和经验库
+Actor, Q1, Q2 = init_online_networks()                 # 创建由 optimizer 更新的三个网络
+Actor_target, Q1_target, Q2_target = copy_networks(Actor, Q1, Q2)  # 各复制一份结构和权重
+replay = empty_replay()                                 # 准备存放环境交互记录
+critic_updates = 0                                      # 按 Critic optimizer.step 的次数计数
+s = env.reset()                                         # 获得当前 episode 的初始观察
+
+repeat:                                                 # 每次先采一条经验，再考虑更新
+    # Collect · 在环境里执行一次动作，把真实反馈存进 replay
+    if warmup:                                          # 初期先收集足够的交互
+        a = random_action()                             # 从合法动作范围抽一个实际推力
+    else:                                               # warmup 结束后由 online Actor 提议
+        a = clip(Actor(s) + exploration_noise, action_bounds)  # 适度探索，并限制实际推力
+    s_next, r, terminated, truncated = env.step(a)       # 执行 a，记录奖励、后继观察与结束原因
+    replay.add(s, a, r, s_next, terminated)               # 存实际执行的 a 和 reset 前的 s_next
+    s = env.reset() if terminated or truncated else s_next  # episode 结束就重置，否则沿后继状态继续
+
+    # Sample · 经验够了就抽一批旧记录，作为这次更新的输入
+    if not replay.ready(): continue                      # 经验数量不足时继续收集
+
+    S, A, R, S_next, D = replay.sample_batch()            # 抽出一批状态、历史动作、奖励、后继状态、终止标记
+    # TD target · 用真实奖励和下一步的估值，为每条经验构造训练标签 Y
+    with no_grad:                                        # 只算固定标签 Y，这段运算不进入反传图
+        ε = clip(sample_target_noise(), -noise_clip, noise_clip)  # 限制加到下一动作上的噪声
+        A_next = clip(Actor_target(S_next) + ε, action_bounds)    # target Actor 给每条后继状态提议动作
+        Q_next = min(Q1_target(S_next, A_next), Q2_target(S_next, A_next))  # 两个 target Q 逐行取较小值
+        Y = R + γ * (1 - D) * Q_next                      # 即时奖励加折扣后的未来估值，终止时只保留奖励
+
+    # Critic update · 让两个 online Critic 对历史动作的预测拟合同一个 Y
+    loss_c = mean((Q1(S, A) - Y)^2 + (Q2(S, A) - Y)^2)    # 两个 online Critic 用历史动作拟合相同的 Y
+    critic_optimizer.zero_grad()                        # 清掉上次留下的 Critic 梯度
+    loss_c.backward()                                   # 求两个 online Critic 的参数梯度
+    critic_optimizer.step()                             # 按梯度更新两个 online Critic
+    critic_updates += 1                                  # 记下这次已经执行的 Critic 更新
+
+    # Delay gate · 按 Critic 更新次数决定何时更新 Actor 和 target networks
+    if critic_updates % policy_delay == 0:              # 每隔几次 Critic 更新，再进入 Actor 分支
+        # Actor update · 用 Q1 对当前 Actor 提议的动作打分，把梯度传回 Actor
+        freeze(Q1.parameters())                         # 冻结 Q1 权重，梯度仍可经过动作输入回到 Actor
+        A_policy = Actor(S)                             # 当前 Actor 对这批旧状态重新提议动作
+        Q_policy = Q1(S, A_policy)                       # 用刚更新的 Q1 给这些新动作打分
+        loss_a = -Q_policy.mean()                        # 用负均值把最大化 Q 转成最小化 loss
+        actor_optimizer.zero_grad()                      # 清掉上次留下的 Actor 梯度
+        loss_a.backward()                                # 梯度从 Q1 的动作输入继续传回 Actor
+
+        # Actor step · 用刚算出的梯度写回 Actor 参数
+        actor_optimizer.step()                          # 写回新的 Actor 参数
+        unfreeze(Q1.parameters())                       # 让 Q1 在下次 Critic 更新时继续学习
+
+        # Target sync · 把新 online 参数少量混入副本，让下次算 Y 的参数缓慢跟进
+        with no_grad:                                    # 不记录这次参数写入的梯度图
+            for online, target in ((Actor, Actor_target), (Q1, Q1_target), (Q2, Q2_target)):  # 每个 online 网络对应自己的副本
+                paired_parameters = zip(online.parameters(), target.parameters(), strict=True)  # 按顺序配对这两个网络的参数
+                for online_param, target_param in paired_parameters:  # 逐对读取对应的参数张量
+                    target_param.copy_((1 - τ) * target_param + τ * online_param)  # 直接写回 target 权重，无需 optimizer
+</script>
+<script id="inference-pseudocode" type="text/plain">
+load trained online Actor weights                       # 加载训练好的 online Actor 权重
+Actor.eval()                                            # 切到推理模式
+s = env.reset()                                         # 获取初始观察
+while episode continues:                                # 每次控制一步
+    with no_grad:                                       # 推理只做前向计算
+        a = Actor(observation_tensor(s))                 # [1, obs_dim] → [1, act_dim]
+    s, r, terminated, truncated = env.step(to_controller_action(a))  # 转换动作尺度并获取下一观察
+</script>
+<script>
+"use strict";
+const config = { gamma: 0.9, tau: 0.1, criticLR: 0.1, actorLR: 0.12, delay: 2, noiseClip: 0.2 };
+const actorInit = { w: [0.2, -0.1], b: 0.1 };
+const q1Init = { w: [0.1, -0.05, 0.6, -0.4], b: 0.1 };
+const q2Init = { w: [0.08, 0.02, 0.4, -0.35], b: 0.02 };
+const clamp = (value, low, high) => Math.min(high, Math.max(low, value));
+const dot = (a, b) => a.reduce((sum, value, i) => sum + value * b[i], 0);
+const features = (s, a) => [...s, a, a * a];
+const affine = (model, input) => dot(model.w, input) + model.b;
+const actorForward = (model, s) => Math.tanh(affine(model, s));
+const score = (model, s, a) => affine(model, features(s, a));
+const col = (values) => values.map((value) => [value]);
+const mean = (values) => values.reduce((a, b) => a + b, 0) / values.length;
+
+function environmentStep(s, a) {
+  const velocity = 0.5 * s[1] + 0.5 * a;
+  const next = [s[0] + velocity, velocity];
+  const terminated = Number(next[0] >= 0.95);
+  return { s, a, r: terminated ? 1 : -0.1, next, terminated };
+}
+
+function parameterGradient(inputs, outputGradients) {
+  return {
+    w: inputs[0].map((_, j) => inputs.reduce((sum, input, i) => sum + input[j] * outputGradients[i], 0)),
+    b: outputGradients.reduce((sum, value) => sum + value, 0)
+  };
+}
+
+function gradientStep(model, gradient, lr) {
+  return { w: model.w.map((value, j) => value - lr * gradient.w[j]), b: model.b - lr * gradient.b };
+}
+
+function polyak(target, online) {
+  const mix = (old, value) => (1 - config.tau) * old + config.tau * value;
+  return { w: target.w.map((value, j) => mix(value, online.w[j])), b: mix(target.b, online.b) };
+}
+
+function targetBatch(models, batch) {
+  const raw = batch.map((row) => actorForward(models.actorTarget, row.next));
+  const noise = [0.3, -0.3];
+  const clipped = noise.map((value) => clamp(value, -config.noiseClip, config.noiseClip));
+  const actions = raw.map((value, i) => clamp(value + clipped[i], -1, 1));
+  const q1 = batch.map((row, i) => score(models.q1Target, row.next, actions[i]));
+  const q2 = batch.map((row, i) => score(models.q2Target, row.next, actions[i]));
+  const mask = batch.map((row) => 1 - row.terminated);
+  const y = batch.map((row, i) => row.r + config.gamma * mask[i] * Math.min(q1[i], q2[i]));
+  return { raw, noise, clipped, actions, q1, q2, mask, y };
+}
+
+function criticStep(model, batch, y) {
+  const inputs = batch.map((row) => features(row.s, row.a));
+  const predicted = inputs.map((input) => affine(model, input));
+  const errors = predicted.map((value, i) => value - y[i]);
+  const outputGradients = errors.map((value) => 2 * value / batch.length);
+  const gradient = parameterGradient(inputs, outputGradients);
+  const updated = gradientStep(model, gradient, config.criticLR);
+  return { inputs, predicted, errors, gradient, updated, after: inputs.map((input) => affine(updated, input)) };
+}
+
+function actorStep(actor, critic, states) {
+  const z = states.map((s) => affine(actor, s));
+  const a = z.map(Math.tanh);
+  const q = states.map((s, i) => score(critic, s, a[i]));
+  const dqDa = a.map((value) => critic.w[2] + 2 * critic.w[3] * value);
+  const dLossDz = a.map((value, i) => -dqDa[i] * (1 - value * value) / states.length);
+  const gradient = parameterGradient(states, dLossDz);
+  const updated = gradientStep(actor, gradient, config.actorLR);
+  return { z, a, q, dqDa, dLossDz, gradient, updated, after: states.map((s) => actorForward(updated, s)) };
+}
+
+function makeTrace() {
+  const models = {
+    actor: actorInit, q1: q1Init, q2: q2Init,
+    actorTarget: structuredClone(actorInit), q1Target: structuredClone(q1Init), q2Target: structuredClone(q2Init)
+  };
+  const frames = [];
+  function add(phase, title, short, description, flow, rows, hint, position) {
+    frames.push({ phase, title, short, description, flow, rows, hint, position, models: structuredClone(models) });
+  }
+  const s0 = [0.3, 0];
+  add("Initialize", "看清六个网络从哪里来", "初始化",
+    "在线 Actor 和两个在线 Critics 使用固定初值。各自复制一份参数得到 target networks。这个阶段还没有经验。",
+    "Actor / Q1 / Q2 → copy parameters → Actor_target / Q1_target / Q2_target",
+    [["Observation", "[1, 2]", [s0], "一行初始观察，列为位置 p 和速度 v"]],
+    "先沿高亮代码读流程。想看 Actor 和两个 Critic 的权重时，再展开下面的网络参数。", s0[0]);
+  const first = environmentStep(s0, 0.6);
+  const second = environmentStep(first.next, 0.5);
+  const batch = [first, second];
+  batch.forEach((row, index) => {
+    add("Collect", "环境执行 warmup 动作 " + (index + 1), "交互 " + (index + 1),
+      "Warmup 使用固定的示范随机抽样值。环境先算 v′=0.5v+0.5a，再算 p′=p+v′；p′ 达到 0.95 即结束并给奖励 1，其余步奖励 −0.1。",
+      "s, executed action → env.step → reward, s_next, terminated → replay",
+      [["s", "[1, 2]", [row.s], "执行前的 [position, velocity]"],
+       ["a", "[1, 1]", [[row.a]], "实际推力"],
+       ["s_next", "[1, 2]", [row.next], "环境实际到达的状态"],
+       ["r", "[1, 1]", [[row.r]], "即时奖励"],
+       ["terminated", "[1, 1]", [[row.terminated]], "是否真正结束"]],
+      index === 0 ? "这条经验的 reward 和后继状态属于 0.6 的力。" : "先保存 [1.0, 0.4] 这个 final observation，再 reset。", row.next[0]);
+  });
+  add("Replay", "把两条 transition 拼成 batch", "抽取 batch",
+    "这次固定抽出两条记录，后续两个 update 复用它们。每个矩阵的行顺序都和 replay 一致。",
+    "replay rows → S, A, R, S_next, D",
+    [["S", "[2, 2]", batch.map((r) => r.s), "执行前的观察"],
+     ["A", "[2, 1]", col(batch.map((r) => r.a)), "实际执行动作"],
+     ["R", "[2, 1]", col(batch.map((r) => r.r)), "环境 reward"],
+     ["S_next", "[2, 2]", batch.map((r) => r.next), "reset 前的下一观察"],
+     ["D", "[2, 1]", col(batch.map((r) => r.terminated)), "terminal 标记"]],
+    "接下来 Q(S,A) 会用 A；构造 label 时，target Actor 会另提议一组动作。");
+  for (let update = 1; update <= 2; update += 1) {
+    const target = targetBatch(models, batch);
+    add("Update " + update + " · Target", "构造一步 TD 目标", "Target " + update,
+      "把真实即时奖励和折扣后的下一步估值接起来，得到这一轮 Critic 回归的训练目标。",
+      "S_next → Actor_target → smoothing → A_next → min(Q1_target, Q2_target) → Y",
+      [["Actor_target(S_next)", "[2, 1]", col(target.raw), "平滑之前的下一动作"],
+       ["noise", "[2, 1]", col(target.noise), "固定抽样值"],
+       ["clipped noise", "[2, 1]", col(target.clipped), "先截断 noise 到 ±0.2"],
+       ["A_next", "[2, 1]", col(target.actions), "加噪后截断到 [-1, 1]"],
+       ["Q1_target", "[2, 1]", col(target.q1), "第一个 target Critic 评价 A_next"],
+       ["Q2_target", "[2, 1]", col(target.q2), "第二个 target Critic 评价同一个 A_next"],
+       ["1 − D", "[2, 1]", col(target.mask), "第二条 terminal，不接未来"],
+       ["Y", "[2, 1]", col(target.y), "R + 0.9 × (1−D) × min(Q1_target,Q2_target)"]],
+      update === 1 ? "这一步在 no_grad 中。Y 当作当前 Critic update 的固定训练标签。" : "第一次没有同步 target，加上复用同一 batch 和噪声，这次 Y 与第一次相同。");
+    frames.at(-1).targetDetail = { batch, target };
+    const q1 = criticStep(models.q1, batch, target.y);
+    const q2 = criticStep(models.q2, batch, target.y);
+    const loss = mean(q1.errors.map((error, i) => error ** 2 + q2.errors[i] ** 2));
+    models.q1 = q1.updated;
+    models.q2 = q2.updated;
+    add("Update " + update + " · Critic", "做回归，写回两个 online Critics", "Critic " + update,
+      "用 replay 动作拼出 Critic 特征。每个 Q 输出对 loss 的梯度来自 2 × (Q − Y) / B；沿 affine 层得到 dW、db，再执行 SGD。",
+      "replay A + S → Q1/Q2 → MSE against Y → backward → Critic optimizer.step",
+      [["φ(S,A)", "[2, 4]", q1.inputs, "[position, velocity, action, action²]"],
+       ["Q1 before", "[2, 1]", col(q1.predicted), "第一个 Critic 的预测"],
+       ["Q2 before", "[2, 1]", col(q2.predicted), "第二个 Critic 的预测"],
+       ["loss_c", "scalar", loss, "mean((Q1−Y)² + (Q2−Y)²)"],
+       ["dW1 / dW2", "[1, 4] 各", [q1.gradient.w, q2.gradient.w], "两个 Critic 的权重梯度"],
+       ["db1 / db2", "[1] 各", [q1.gradient.b, q2.gradient.b], "两个 bias 梯度"],
+       ["Q1 after", "[2, 1]", col(q1.after), "更新权重后用同一输入重新 forward"],
+       ["Q2 after", "[2, 1]", col(q2.after), "更新权重后用同一输入重新 forward"]],
+      "检查下面的参数面板。只有两个 online Critic 写回了参数。");
+    if (update % config.delay !== 0) {
+      add("Delay gate", "第一轮跳过 Actor 与 target sync", "跳过 Actor",
+        "已完成 1 次 Critic update。delay=2，因此先进入下一轮。",
+        "critic_updates = 1 → 1 % 2 ≠ 0 → skip Actor / target sync",
+        [["critic_updates", "scalar", update, "按 Critic optimizer step 计数"],
+         ["policy_delay", "scalar", config.delay, "每隔几次 Critic update 进入 Actor 分支"]],
+        "这一步没有更新任何网络。");
+      continue;
+    }
+    const actor = actorStep(models.actor, models.q1, batch.map((row) => row.s));
+    add("Update 2 · Actor backward", "让 Critic 提供动作方向", "Actor 梯度",
+      "Actor 用 S 重新提议动作。固定 Q1 的 W、b，计算 Q1 对输入动作的导数，然后通过 tanh 和 affine 层把梯度传到 Actor 参数。",
+      "Actor weights → proposed action → Q1(S, action) → −mean(Q1)",
+      [["S", "[2, 2]", batch.map((row) => row.s), "与 Critic 使用相同的状态"],
+       ["Actor pre-activation", "[2, 1]", col(actor.z), "z = S × Wᵀ + b"],
+       ["Actor(S)", "[2, 1]", col(actor.a), "提议动作 tanh(z)"],
+       ["Q1(S, Actor(S))", "[2, 1]", col(actor.q), "更新后的 Q1 给新动作打分"],
+       ["loss_a", "scalar", -mean(actor.q), "负的平均估计回报"],
+       ["∂loss_a/∂Q1", "[2, 1]", col(actor.q.map(() => -1 / actor.q.length)), "负均值给每个 Q 分数的梯度是 −1/B"],
+       ["∂Q1/∂a", "[2, 1]", col(actor.dqDa), "w_action + 2 × w_quadratic × action"],
+       ["∂loss_a/∂z", "[2, 1]", col(actor.dLossDz), "经过 tanh 和 batch mean 后的梯度"]],
+      "梯度通过 Q1 对动作的计算。这里还没有执行 Actor optimizer step。");
+    models.actor = actor.updated;
+    add("Update 2 · Actor step", "把梯度写回 Actor", "Actor 写回",
+      "SGD 根据 Actor 的 dW 和 db 更新权重。用同一批 S 再 forward 一次，可以观察动作变化。",
+      "actor_param ← actor_param − actor_lr × grad",
+      [["dW / db", "[1, 2] / [1]", [actor.gradient.w, [actor.gradient.b]], "只用于更新 Actor"],
+       ["Actor(S) before", "[2, 1]", col(actor.a), "step 前的动作提议"],
+       ["Actor(S) after", "[2, 1]", col(actor.after), "step 后的动作提议"]],
+      "Critic 保持上一帧的参数。Actor 的动作变化说明它沿 Critic 的评分方向调整。");
+    models.actorTarget = polyak(models.actorTarget, models.actor);
+    models.q1Target = polyak(models.q1Target, models.q1);
+    models.q2Target = polyak(models.q2Target, models.q2);
+    const syncedTarget = targetBatch(models, batch);
+    add("Update 2 · Target sync", "让算 TD 目标的副本慢慢跟上", "同步 targets",
+      "第 50–55 行更新三份 target 副本。每个 target 参数沿着它和当前 online 参数的差距走一小步，供下一轮估计回报。",
+      "第 55 行同步副本 → 下次第 25 行 A_next → 第 26 行 Q_next → 第 27 行一步 TD 目标",
+      [["经验 1 · A_next", "[2]", [target.actions[0], syncedTarget.actions[0]], "同一条经验和噪声，同步前 → 同步后"],
+       ["经验 1 · Q_next", "[2]", [Math.min(target.q1[0], target.q2[0]), Math.min(syncedTarget.q1[0], syncedTarget.q2[0])], "两个 target Q 的较小值，同步前 → 同步后"],
+       ["经验 1 · 一步 TD 目标", "[2]", [target.y[0], syncedTarget.y[0]], "把同一个即时 reward 接到估值上，同步前 → 同步后"]],
+      "表格只做一次前向对拍，展示新副本下次会怎样参与构造目标。完整参数可展开查看。");
+  }
+  const initialAction = actorForward(actorInit, s0);
+  const finalAction = actorForward(models.actor, s0);
+  const deployed = environmentStep(s0, finalAction);
+  add("Inference", "部署时执行训练后的 Actor", "Inference",
+    "载入 online Actor 权重，用一个观察做确定性 forward。将输出力交给环境执行，再取下一观察。",
+    "s [1, 2] → trained Actor → a [1, 1] → controller / env.step",
+    [["s", "[1, 2]", [s0], "与初始化使用同一个观察"],
+     ["Initial Actor(s)", "[1, 1]", [[initialAction]], "训练前的输出，用于对比"],
+     ["Trained Actor(s)", "[1, 1]", [[finalAction]], "部署时实际执行的推力"],
+     ["s_next", "[1, 2]", [deployed.next], "执行 trained Actor 动作后的观察"]],
+    "Inference 只调用 Actor；关闭探索噪声。两个 Critics、target networks、replay 和 optimizer 留在训练端。", deployed.next[0]);
+  return frames;
+}
+
+function mountDebugger(doc, frames) {
+  const get = (id) => doc.getElementById(id);
+  const names = { actor:"Actor", q1:"Q1", q2:"Q2", actorTarget:"Actor_target", q1Target:"Q1_target", q2Target:"Q2_target" };
+  const trainingCode = get("training-pseudocode").textContent.trim().split("\n");
+  const inferenceCode = get("inference-pseudocode").textContent.trim().split("\n");
+  const codeBounds = {
+    Initialize: ["# Initialize ·", "s = env.reset()"],
+    Collect: ["    # Collect ·", "    s = env.reset() if"],
+    Replay: ["    # Sample ·", "    S, A, R, S_next, D ="],
+    Target: ["    # TD target ·", "        Y ="],
+    Critic: ["    # Critic update ·", "    critic_updates += 1"],
+    "Delay gate": ["    # Delay gate ·", "    if critic_updates %"],
+    "Actor backward": ["        # Actor update ·", "        loss_a.backward()"],
+    "Actor step": ["        # Actor step ·", "        unfreeze(Q1"],
+    "Target sync": ["        # Target sync ·", "                    target_param.copy_"],
+    Inference: ["load trained", "    s, r, terminated, truncated ="]
+  };
+  const format = (value) => Array.isArray(value)
+    ? "[" + value.map(format).join(", ") + "]"
+    : Number(value.toFixed(6)).toString();
+  function node(tag, label, className) {
+    const el = doc.createElement(tag);
+    if (className) el.className = className;
+    el.textContent = label;
+    return el;
+  }
+  function renderCode(phase) {
+    const step = phase.split(" · ").at(-1);
+    const inference = step === "Inference";
+    const code = inference ? inferenceCode : trainingCode;
+    const [first, last] = codeBounds[step];
+    const start = code.findIndex((line) => line.startsWith(first));
+    const end = code.findIndex((line) => line.startsWith(last));
+    get("code-caption").textContent = (inference ? "Inference" : "训练流程") + " · " +
+      (start === end ? "第 " + (start + 1) + " 行" : "第 " + (start + 1) + "–" + (end + 1) + " 行") +
+      "。高亮行对应下面的数值，滚动可查看完整伪代码。";
+    const lines = code.map((line, i) => {
+      const entry = node("span", "", "code-line");
+      const number = node("span", String(i + 1), "line-number");
+      number.setAttribute("aria-hidden", "true");
+      const skippedWarmupBranch = step === "Collect" && (line.startsWith("    else:") || line.startsWith("        a = clip(Actor(s)"));
+      if (i >= start && i <= end && !skippedWarmupBranch) entry.setAttribute("aria-current", "step");
+      entry.append(number, node("span", line || " ", ""));
+      return entry;
+    });
+    const container = get("code-lines");
+    container.replaceChildren(...lines);
+    const firstVisible = lines[Math.max(0, start - 1)];
+    get("code-panel").scrollTop = firstVisible.offsetTop - container.offsetTop;
+  }
+  let current = 0;
+  let targetRow = 0;
+  const targetButtons = [get("target-row-0"), get("target-row-1")];
+  targetButtons.forEach((button, i) => {
+    button.addEventListener("click", () => {
+      targetRow = i;
+      renderTarget(frames[current].targetDetail);
+    });
+  });
+  function renderTarget(detail) {
+    get("target-detail").hidden = !detail;
+    if (!detail) return;
+    const { batch, target } = detail;
+    const i = targetRow;
+    const row = batch[i];
+    const future = Math.min(target.q1[i], target.q2[i]);
+    targetButtons.forEach((button, j) => button.setAttribute("aria-pressed", String(i === j)));
+    const startX = 34 + 472 * row.s[0];
+    const arrivalX = 34 + 472 * row.next[0];
+    get("target-start").setAttribute("cx", startX);
+    get("target-arrival").setAttribute("cx", arrivalX);
+    get("target-motion").setAttribute("x1", startX);
+    get("target-motion").setAttribute("x2", arrivalX - 10);
+    get("target-transition").textContent = "位置 " + format(row.s[0]) + " → " + format(row.next[0]) +
+      "，实际推力 a = " + format(row.a);
+    get("target-reward").textContent = "r = " + format(row.r);
+    get("target-observation").textContent = "到达后的 [位置, 速度] = " + format(row.next);
+    get("target-mask").textContent = row.terminated ? "已到终点，未来项开关 = 0" : "还能继续，未来项开关 = 1";
+    get("target-action").textContent = "用于估值的推力 a_next = " + format(target.actions[i]) + "。这一步只计算模型输出。";
+    get("target-noise").textContent = "原始提议 " + format(target.raw[i]) + "，加上截断后的噪声 " +
+      format(target.clipped[i]) + "，再限制到 [-1, 1]。";
+    const scores = [target.q1[i], target.q2[i]];
+    scores.forEach((value, j) => {
+      const chip = get("target-score-" + (j + 1));
+      chip.dataset.chosen = String(value === future);
+      chip.textContent = "Q" + (j + 1) + " = " + format(value) + (value === future ? "（取较小值）" : "");
+    });
+    get("target-join").textContent = row.terminated
+      ? "↓ 只保留即时奖励。批量算出的未来估值乘 0。"
+      : "↓ 即时奖励与折扣后的未来估值在这里合并";
+    get("target-equation").textContent = format(row.r) + " + " + format(config.gamma) +
+      " × " + format(target.mask[i]) + " × " + format(future) +
+      (row.terminated ? " = " : " ≈ ") + format(target.y[i]);
+    const criticInput = "下一步，online Critic 会在原位置 " + format(row.s[0]) + " 给已执行的推力 " + format(row.a) + " 预测回报，并把预测往这个一步 TD 目标靠。";
+    get("target-next").textContent = (row.terminated ? "这条经验已经终止，所以 Y 就是即时奖励。" : "") + criticInput;
+  }
+  function renderSync(phase, prior, models) {
+    const sync = phase.endsWith(" · Target sync");
+    get("sync-detail").hidden = !sync;
+    if (!sync) return;
+    const oldBias = prior.q2Target.b;
+    const onlineBias = models.q2.b;
+    const newBias = models.q2Target.b;
+    const position = 34 + 472 * config.tau;
+    get("sync-distance").setAttribute("x2", position);
+    get("sync-marker").setAttribute("cx", position);
+    get("sync-old").textContent = format(oldBias);
+    get("sync-new").textContent = format(newBias);
+    get("sync-online").textContent = format(onlineBias);
+    get("sync-equation").textContent = "实心点是新副本，走完参数差距的 " + format(100 * config.tau) + "%。 " +
+      format(oldBias) + " + " + format(config.tau) + " × (" + format(onlineBias) +
+      " − " + format(oldBias) + ") ≈ " + format(newBias);
+  }
+  const buttons = frames.map((frame, i) => {
+    const button = node("button", "", "");
+    button.type = "button";
+    button.append(node("span", String(i + 1).padStart(2,"0"), "index"), node("span", frame.short, ""));
+    button.addEventListener("click", () => render(i));
+    get("steps").append(button);
+    return button;
+  });
+  function render(index) {
+    current = clamp(index, 0, frames.length - 1);
+    const frame = frames[current];
+    const prior = frames[current - 1]?.models ?? frame.models;
+    get("counter").textContent = (current + 1) + " / " + frames.length;
+    get("phase").textContent = frame.phase;
+    get("step-title").textContent = frame.title;
+    get("description").textContent = frame.description;
+    get("flow").textContent = frame.flow;
+    renderCode(frame.phase);
+    renderTarget(frame.targetDetail);
+    renderSync(frame.phase, prior, frame.models);
+    get("hint").textContent = frame.hint;
+    get("prev").disabled = current === 0;
+    get("next").disabled = current === frames.length - 1;
+    buttons.forEach((button, i) => button.setAttribute("aria-current", i === current ? "step" : "false"));
+    const rail = get("rail");
+    rail.style.display = frame.position === undefined ? "none" : "block";
+    if (frame.position !== undefined) {
+      rail.removeAttribute("hidden");
+      get("slider").setAttribute("cx", String(24 + frame.position * 343));
+      get("rail-title").textContent = "滑块位置 " + format(frame.position);
+    }
+    const rows = frame.rows.map(([name, shape, data, meaning]) => {
+      const tr = doc.createElement("tr");
+      tr.append(node("td", name, ""), node("td", shape, "shape"),
+        node("td", Array.isArray(data) && Array.isArray(data[0]) ? data.map(format).join("\n") : format(data), "value"),
+        node("td", meaning, ""));
+      return tr;
+    });
+    get("tensors").replaceChildren(...rows);
+    const cards = Object.entries(frame.models).map(([key, value]) => {
+      const old = prior[key];
+      const changed = value.b !== old.b || value.w.some((w, j) => w !== old.w[j]);
+      const card = node("div", "", changed ? "model changed" : "model");
+      card.append(node("h3", names[key], ""));
+      const features = value.w.length === 2 ? "p, v" : "p, v, a, a²";
+      card.append(node("p", "W [1, " + value.w.length + "] · 列顺序 " + features + " · b [1]", ""));
+      if (changed) {
+        card.append(node("div", "本步更新", "delta"), node("pre", "Before W " + format(old.w) + "\nBefore b " + format(old.b), ""));
+      }
+      card.append(node("pre", "W " + format(value.w) + "\nb " + format(value.b), ""));
+      return card;
+    });
+    get("models").replaceChildren(...cards);
+  }
+  get("reset").addEventListener("click", () => render(0));
+  get("prev").addEventListener("click", () => render(current - 1));
+  get("next").addEventListener("click", () => render(current + 1));
+  doc.addEventListener("keydown", (event) => {
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.target.closest?.("#code-panel")) return;
+    if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+      event.preventDefault();
+      render(current + (event.key === "ArrowRight" ? 1 : -1));
+    }
+  });
+  render(0);
+}
+
+if (typeof document !== "undefined") mountDebugger(document, makeTrace());
+</script>
+</body>
+</html>

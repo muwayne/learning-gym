@@ -66,6 +66,8 @@
 | A1·S06 | Induction head：ICL 的机制细胞 | 2 层 attention-only 模型复现 copy 回路 |
 | A1·S07 | 复现 burstiness → ICL（Chan et al. 玩具版） | 成簇采样 vs 均匀采样的 ICL 出现对比 |
 
+A1·S03 补充阅读覆盖计算图、常见运算的梯度和一次 SGD 更新。[Autograd 讲义](modules/a1-transformer/autograd-primer.md) · [HTML 互动版](modules/a1-transformer/autograd-primer.html)
+
 S06–S07 机制背景：[ICL 机制精编](references/icl-s1-gen15-digest.md)。
 
 **Exit Gate**：用[「Transformer 15 问 debug checklist」](references/transformer-digest.md)逐问过一遍 π0.5 的 attention 相关代码并入档（pi05-training.md（内部资料） 为入口）。
@@ -135,7 +137,7 @@ S05–S07 案例背景：[ICL 机制精编](references/icl-s1-gen15-digest.md)�
 
 ## RL 基础讲义与课次的对应（T2/T3 共用）
 
-**TD3-first 试读入口：** [第一篇](modules/t3-sim-to-rl/td3-first-lesson.md) → 分次问答 → P4 核心实现与固定 batch 验证 → TD3 对应公开代码 → 控制任务诊断与单变量改进。无需先通读 foundations、通过整套 P0 或完成 PPO/SAC。此路径不新增 Lesson，不更改 Pass 或课程级 Exit Gate；下列完整复习路线仍可选。
+**TD3-first 试读入口：** [第一篇](modules/t3-sim-to-rl/td3/README.md) → 分次问答 → P4 核心实现与固定 batch 验证 → TD3 对应公开代码 → 控制任务诊断与单变量改进。无需先通读 foundations、通过整套 P0 或完成 PPO/SAC。此路径不新增 Lesson，不更改 Pass 或课程级 Exit Gate；下列完整复习路线仍可选。
 
 **整体学习顺序：恢复价值学习 → PPO → TD3 → SAC → 生成策略后训练 → 可微动力学 BPTT。** 用 [RL 基础讲义](modules/t3-sim-to-rl/rl-foundations-primer.html) 和 [统一温习讲义](modules/t3-sim-to-rl/rl-control-review-primer.html) 读机制，按 [分段实践](modules/t3-sim-to-rl/rl-control-practice.md) 做伪代码、实现和对照。P 编号是练习入口，沿用既有编号；不按编号线性推进。BPTT 在经典算法基础之后可独立选修，不依赖做完生成策略后训练。
 

@@ -34,7 +34,7 @@ HTML 讲义随仓库提供。克隆后可在浏览器直接打开，例如 [RL �
 
 RL（T2+T3）共 17/45 节，约占总课次 37.8%。两线在 T3·S08 汇合；T3·S09/S10 是独立选修。唯一课表见 [curriculum.md](curriculum.md)。
 
-**想先学懂一个算法：** 可直接从 [TD3 第一篇](modules/t3-sim-to-rl/td3-first-lesson.md)进入；不要求先通读 foundations、完成 P0 或学完 PPO/SAC。先读第 1–4 节，再按需做问答与 P4 实践；旧路线保留供系统复习。
+**想先学懂一个算法：** 可直接从 [TD3 第一篇](modules/t3-sim-to-rl/td3/README.md)进入；不要求先通读 foundations、完成 P0 或学完 PPO/SAC。先读总览和完整流程，再跟 Training Debugger 做一次单步走查；旧路线保留供系统复习。
 
 系统复习路线从[恢复练习 P0](modules/t3-sim-to-rl/rl-control-practice.md#p0--恢复价值学习)进入，先用[基础讲义](modules/t3-sim-to-rl/rl-foundations-primer.html)与[统一温习讲义](modules/t3-sim-to-rl/rl-control-review-primer.html)打通 PPO、TD3、SAC 的更新，再进入生成策略后训练与可微动力学。DexLab、FB 和综合诊断按原课次选用。各阶段亲手做什么、怎样验收，见[课表](curriculum.md#rl-基础讲义与课次的对应t2t3-共用)。
 
