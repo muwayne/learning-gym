@@ -1,0 +1,386 @@
+<!doctype html>
+<!-- Generated reading edition. Source: autograd-primer.md; SHA256: a60293cc35789b79c661b2cbcb61b27f183576c0aaffa72825cb05a388313e82. pandoc 3.7.0.2. Edit the Markdown source first. --><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Autograd · 从 loss 到参数更新</title><style>:root{color-scheme:light;--ink:#213341;--muted:#536777;--accent:#126578;--line:#d9e4e9;--paper:#fff;--tint:#f1f7f9}
+*{box-sizing:border-box}html{scroll-padding-top:24px}body{margin:0;color:var(--ink);background:#f5f7f8;font:17px/1.9 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}a{color:var(--accent);text-underline-offset:.2em}a:hover{color:#053946}header{padding:44px 40px 32px;background:#163e4b;color:#fff}header .eyebrow{font-size:13px;letter-spacing:.14em;color:#bfe3e8}header h1{font-size:clamp(26px,3vw,39px);line-height:1.4;max-width:1100px;margin:12px 0}header p{font-size:15px;color:#d2e6ea;margin:0}.layout{max-width:1480px;margin:auto;display:grid;grid-template-columns:285px minmax(0,1fr);gap:28px;padding:28px}nav{align-self:start;position:sticky;top:20px;max-height:calc(100vh - 40px);overflow:auto;padding:18px;background:var(--paper);border:1px solid var(--line);border-radius:12px;font-size:13px;line-height:1.7}nav summary{font-size:16px;font-weight:700;cursor:pointer}nav ul{list-style:none;padding-left:12px}nav>details>ul{padding-left:0}nav li{margin:8px 0}nav a{text-decoration:none}main{min-width:0;max-width:1060px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:36px 44px}h2{margin:64px 0 20px;padding-top:22px;border-top:2px solid var(--line);font-size:26px;line-height:1.5;color:#143e4c}h2:first-of-type{margin-top:30px}h3{margin:42px 0 18px;font-size:21px;line-height:1.55}h4{font-size:18px;margin-top:30px}p{margin:16px 0}strong{font-weight:650}blockquote{border-left:4px solid #4892a4;background:var(--tint);margin:20px 0;padding:8px 20px;color:#385362;font-size:15px}blockquote p{margin:10px 0}code{font: .87em/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;background:#eff3f5;border-radius:4px;padding:2px 5px;overflow-wrap:anywhere}pre{background:#f0f5f7;border:1px solid var(--line);border-radius:10px;padding:18px;overflow-x:auto}pre code{padding:0;background:none;white-space:pre;overflow-wrap:normal}.table-wrap{overflow-x:auto;margin:24px 0;border:1px solid var(--line);border-radius:9px}table{border-collapse:collapse;width:100%;font-size:14px;line-height:1.75;margin:0}th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;min-width:90px}th{background:#e9f3f5;color:#174c5b;font-weight:650}tbody tr:nth-child(even){background:#f8fafb}tr:last-child td{border-bottom:0}table p{margin:0}math{font-family:"STIX Two Math","Cambria Math",math;font-size:1.08em}.math.display{display:block;overflow-x:auto;padding:22px 14px;margin:24px 0;background:#f5f8fa;border:1px solid var(--line);border-radius:10px}.math.display math{margin:auto;white-space:nowrap;min-width:max-content}.diagram{margin:26px 0;padding:20px 12px;border:1px solid var(--line);border-radius:12px;background:#fcfefe;overflow-x:auto}.diagram svg{display:block;width:100%;min-width:500px;height:auto;margin:auto;max-width:740px}footer{font-size:12px;color:var(--muted);margin:44px 0 0;padding-top:18px;border-top:1px solid var(--line)}@media(max-width:1020px){.layout{display:block;max-width:940px;padding:18px}nav{position:static;max-height:300px;margin-bottom:20px}main{padding:24px}}@media(max-width:580px){body{font-size:16px}header{padding:28px 20px}.layout{padding:10px}main{padding:20px 16px}h2{font-size:23px}h3{font-size:20px}.diagram{padding:12px 6px}}@media print{body{background:white;font-size:11pt}header{background:white;color:#163e4b;padding:0}header .eyebrow,header p{color:#536777}nav{display:none}.layout{display:block;padding:0}main{border:0;padding:0;max-width:none}.diagram,pre,.math.display{break-inside:avoid}.diagram svg{min-width:0}h2,h3,h4{break-after:avoid}a{color:inherit}.table-wrap{overflow:visible}table{font-size:9pt}}
+.function-demo{border:1px solid #a2c5ce;border-radius:12px;padding:20px;margin:26px 0;background:#f6fafb}.function-demo h4{margin:0 0 8px}.function-demo svg{width:100%;max-height:280px;display:block;background:white;border-radius:8px}.function-demo svg text{font:14px system-ui;fill:#536777}.function-demo label{display:block;margin-top:15px;font-size:15px;font-weight:600}.function-demo output{float:right;font-variant-numeric:tabular-nums}.function-demo input[type=range]{width:100%;accent-color:#126578;height:32px}.function-demo select{font:inherit;padding:6px 12px;background:white;color:#213341;border:1px solid #a2c5ce;border-radius:6px}.demo-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 0}.demo-results div{background:white;border:1px solid #d9e4e9;border-radius:8px;padding:12px;font-size:14px}.demo-results strong{display:block;font-size:22px;color:#126578;font-variant-numeric:tabular-nums}.demo-note{font-size:14px;color:#536777}@media(max-width:580px){.demo-results{grid-template-columns:1fr}}.autograd-lab {
+  margin: 1.2rem 0;
+  padding: clamp(0.7rem, 3vw, 1.2rem);
+  border: 1px solid #8ca5ba;
+  border-radius: 12px;
+}
+.autograd-lab h3, .autograd-lab h4 { margin: 0 0 .45rem; }
+.lab-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem .9rem;
+  margin-bottom: 1rem;
+}
+.lab-controls [role="group"] { display: flex; flex-wrap: wrap; gap: .35rem; }
+.lab-controls button {
+  font: inherit;
+  font-size: .85rem;
+  color: inherit;
+  background: transparent;
+  border: 1px solid #8ca5ba;
+  border-radius: 6px;
+  padding: .25rem .55rem;
+  cursor: pointer;
+}
+.lab-controls button[aria-pressed="true"] { background: #125b82; color: #fff; border-color: #125b82; }
+.lab-controls button:focus-visible { outline: 2px solid #3680b0; outline-offset: 2px; }
+.lab-branches {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(.35rem, 2vw, .9rem);
+  margin: .65rem 0;
+}
+.lab-branch { min-width: 0; padding: .4rem; }
+.lab-branch h4 { text-align: center; font-size: .85rem; }
+.lab-node {
+  position: relative;
+  padding: .36rem .55rem;
+  min-width: 0;
+  border: 1px solid #8ca5ba;
+  border-radius: 6px;
+  font-size: .88rem;
+  overflow-wrap: anywhere;
+}
+.lab-node output { display: block; font-variant-numeric: tabular-nums; }
+.lab-node small { display: block; color: #226285; }
+.lab-node small[hidden] { display: none; }
+.lab-operation { border-color: #3680b0; }
+.lab-node[data-zero-slope="true"] { border-style: dashed; }
+.lab-node[data-zero-slope="true"] small { color: #9b4716; }
+.lab-branch .lab-node + .lab-node { margin-top: 1rem; }
+.lab-branch .lab-node + .lab-node::before {
+  content: "↓";
+  position: absolute;
+  top: -.97rem;
+  left: calc(50% - .32rem);
+  line-height: .9rem;
+  color: #507b98;
+}
+.autograd-lab:not([data-phase="forward"]) .lab-branch .lab-node + .lab-node::before { content: "↑"; }
+.lab-shared { margin: 0 auto; max-width: 23rem; text-align: center; border-width: 2px; }
+.lab-summary { margin-bottom: 0; }</style></head><body><header><div class="eyebrow">A1 · S03 · 补充阅读</div><h1>Autograd · 从 loss 到参数更新</h1><p>沿同一张计算图观察 forward、backward 和 SGD 如何分工。</p></header><div class="layout"><nav aria-label="讲义目录"><details open><summary>阅读目录</summary><ul>
+<li><a href="#0--三件事各由谁做" id="toc-0--三件事各由谁做">0 · 三件事各由谁做</a></li>
+<li><a href="#1--两个预测共用一个参数" id="toc-1--两个预测共用一个参数">1 · 两个预测共用一个参数</a></li>
+<li><a href="#2--常见运算怎样传梯度" id="toc-2--常见运算怎样传梯度">2 · 常见运算怎样传梯度</a></li>
+<li><a href="#3--用标量写一个最小-autograd" id="toc-3--用标量写一个最小-autograd">3 · 用标量写一个最小 autograd</a></li>
+<li><a href="#4--回到-td3" id="toc-4--回到-td3">4 · 回到 TD3</a></li>
+<li><a href="#5--一次预测和一次实现" id="toc-5--一次预测和一次实现">5 · 一次预测和一次实现</a></li>
+</ul></details></nav><main><h2 id="0--三件事各由谁做">0 · 三件事各由谁做</h2>
+<p>训练程序先用参数算出一个标量 <code>loss</code>，autograd 再算「参数稍微动一点，loss 会往哪个方向变」，最后 optimizer 读取这些梯度并更新参数。本页用两个预测共享一个权重的回归例子，沿同一张图走一遍 <code>forward → backward → SGD step</code>。然后把 <code>mean</code>、<code>min</code> 和 <code>clip</code> 的反传规则写进一个可以运行的标量引擎。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>输入和产出</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Forward</strong></td>
+<td>用当前参数计算预测和 loss，并记录各步计算之间的依赖。</td>
+</tr>
+<tr>
+<td><strong>Backward</strong></td>
+<td>从 loss 反向应用 chain rule（链式法则），得到 loss 对每个需要梯度的参数的导数。</td>
+</tr>
+<tr>
+<td><strong>Optimizer step</strong></td>
+<td>用参数的梯度计算更新量。这里用最简单的 SGD，<code>新参数 = 旧参数 − 学习率 × 梯度</code>。</td>
+</tr>
+</tbody>
+</table></div>
+<p>梯度是<strong>当前这次 forward 的局部变化率</strong>。PyTorch 的 <code>loss.backward()</code> 默认把梯度累加到参数的 <code>.grad</code>。典型训练循环每轮先调用 <code>optimizer.zero_grad()</code>，再算 loss、backward、step。下一轮重新 forward。如果要用 gradient clipping，一般在 backward 之后、step 之前限制梯度本身。下文的 <code>clip</code> 作用于 forward 的预测值。 <a href="https://docs.pytorch.org/docs/stable/notes/autograd.html">PyTorch · Autograd mechanics</a></p>
+<h2 id="1--两个预测共用一个参数">1 · 两个预测共用一个参数</h2>
+<p>模型只有一个可训练的标量权重 <code>w</code>。第一条样本把 <code>2w</code> 限制到 <code>[-1, 1]</code>，得到预测 <code>p₁</code>。第二条样本取 <code>w</code> 与 <code>0.75</code> 中较小的值，得到预测 <code>p₂</code>。真实标签分别是 <code>0.8</code> 和 <code>1.0</code>。Loss 是两个平方误差的平均。这样一张小图就能同时观察两条路径如何贡献梯度。</p>
+<pre class="text"><code>       ┌─ 2w → clip(−1, 1) → p₁ → (p₁ − 0.8)² ─┐
+w ─────┤                                        ├─ mean → loss
+       └─  w → min(0.75)   → p₂ → (p₂ − 1.0)² ─┘</code></pre>
+<section class="autograd-lab" id="backward-lab" aria-labelledby="lab-title">
+  <h3 id="lab-title">同一个 w，两条梯度路径</h3>
+  <div class="lab-controls">
+    <div role="group" aria-label="选择初始权重">
+      <button type="button" data-weight="0.25" aria-pressed="true">w = 0.25</button>
+      <button type="button" data-weight="0.60" aria-pressed="false">w = 0.60</button>
+      <button type="button" data-weight="0.90" aria-pressed="false">w = 0.90</button>
+    </div>
+    <div role="group" aria-label="选择计算阶段">
+      <button type="button" data-phase="forward" aria-pressed="true">1 Forward</button>
+      <button type="button" data-phase="backward" aria-pressed="false">2 Backward</button>
+      <button type="button" data-phase="step" aria-pressed="false">3 SGD step</button>
+    </div>
+  </div>
+  <div class="lab-node lab-shared" data-node="weight">
+    <strong>共享参数 w</strong><output data-value></output><small data-grad hidden></small>
+  </div>
+  <div class="lab-branches">
+    <div class="lab-branch" aria-label="第一条路径">
+      <h4>路径 1 · 标签 0.8</h4>
+      <div class="lab-node" data-node="scale">
+        <strong>2w</strong><output data-value></output><small data-grad hidden></small>
+      </div>
+      <div class="lab-node lab-operation" data-node="clip">
+        <strong>clip(2w, −1, 1)</strong><output data-value></output><small data-grad hidden></small>
+      </div>
+      <div class="lab-node" data-node="error1">
+        <strong>平方误差</strong><output data-value></output><small data-grad hidden></small>
+      </div>
+    </div>
+    <div class="lab-branch" aria-label="第二条路径">
+      <h4>路径 2 · 标签 1.0</h4>
+      <div class="lab-node" data-node="input">
+        <strong>w</strong><output data-value></output><small data-grad hidden></small>
+      </div>
+      <div class="lab-node lab-operation" data-node="min">
+        <strong>min(w, 0.75)</strong><output data-value></output><small data-grad hidden></small>
+      </div>
+      <div class="lab-node" data-node="error2">
+        <strong>平方误差</strong><output data-value></output><small data-grad hidden></small>
+      </div>
+    </div>
+  </div>
+  <div class="lab-node lab-shared" data-node="loss">
+    <strong>mean → loss</strong><output data-value></output><small data-grad hidden></small>
+  </div>
+  <p class="lab-summary" id="lab-summary" aria-live="polite"></p>
+</section>
+<p>从 <code>w = 0.25</code> 开始，两个预测是 <code>0.50</code> 和 <code>0.25</code>，loss 是 <code>0.32625</code>。Backward 从 <code>∂loss/∂loss = 1</code> 开始。<code>mean</code> 先给每个平方误差 <code>0.5</code> 的梯度。第一条路径接着乘平方误差对预测值的局部导数 <code>2 × (0.50 − 0.8)</code>，乘 <code>clip</code> 的局部斜率 <code>1</code>，再乘 <code>2w</code> 的局部斜率 <code>2</code>。所以第一条路径给 <code>w</code> 的贡献是 <code>−0.60</code>。第二条路径给 <code>w</code> 的贡献是 <code>−0.75</code>。<strong>同一个参数被用两次，两个贡献相加</strong>，得到 <code>w.grad = −1.35</code>。</p>
+<p>用学习率 <code>0.1</code> 做一次 SGD，<code>w</code> 从 <code>0.25</code> 变为 <code>0.385</code>。用新参数重新 forward，loss 变为 <code>0.1895625</code>。切换到 <code>w = 0.60</code>，第一条路径的预测仍然有误差，但 <code>2w = 1.2</code> 落在 <code>clip</code> 的平坦区域，该路径传回 <code>w</code> 的梯度为零。再切到 <code>w = 0.90</code>，第二条路径也选了常量上限，两条贡献都是零，SGD 这一步就停在原地。</p>
+<h2 id="2--常见运算怎样传梯度">2 · 常见运算怎样传梯度</h2>
+<p>下面的 <code>g</code> 表示从下游传到这个运算输出的梯度。反传给某个输入的是 <code>g × 该输入的局部导数</code>。有多条路径指向同一个输入时，把贡献累加。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>运算</th>
+<th>反传给输入的规则</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>x + y</code>、<code>x − y</code></td>
+<td>加法给两边各 <code>g</code>，减法给 <code>x</code> 传 <code>g</code>、给 <code>y</code> 传 <code>−g</code>。广播复用的元素会累加各处贡献。</td>
+</tr>
+<tr>
+<td><code>x * y</code>、<code>x / y</code></td>
+<td>乘法给两边分别传 <code>gy</code>、<code>gx</code>。实数除法在 <code>y ≠ 0</code> 时分别传 <code>g/y</code>、<code>−gx/y²</code>。</td>
+</tr>
+<tr>
+<td><code>x**2</code>、<code>exp(x)</code>、<code>log(x)</code></td>
+<td>分别乘局部导数 <code>2x</code>、<code>exp(x)</code>、<code>1/x</code>。实数 <code>log</code> 要求 <code>x &gt; 0</code>。</td>
+</tr>
+<tr>
+<td><code>X @ W</code></td>
+<td>若输入是实数二维矩阵，上游梯度为 <code>G</code>，则给 <code>X</code> 传 <code>G @ W.T</code>，给 <code>W</code> 传 <code>X.T @ G</code>。</td>
+</tr>
+<tr>
+<td><code>sum</code>、<code>mean</code></td>
+<td><code>sum</code> 给参与同一个求和的元素各传 <code>g</code>。<code>mean</code> 各传 <code>g/N</code>，<code>N</code> 是这一组参与平均的元素数。</td>
+</tr>
+<tr>
+<td><code>minimum</code>、<code>maximum</code></td>
+<td>较小值或较大值唯一时，把 <code>g</code> 传给被选中的值。相等时由具体算子决定怎样分配。</td>
+</tr>
+<tr>
+<td><code>clip(x, lo, hi)</code></td>
+<td>固定上下界时，区间内传 <code>g</code>，区间外传 <code>0</code>。正好在边界处，左右斜率不同，要看框架的约定。</td>
+</tr>
+<tr>
+<td><code>relu</code>、<code>tanh</code>、<code>sigmoid</code></td>
+<td>ReLU 正半轴乘 <code>1</code>、负半轴乘 <code>0</code>。若输出为 <code>y</code>，tanh 乘 <code>1 − y²</code>，sigmoid 乘 <code>y(1 − y)</code>。</td>
+</tr>
+<tr>
+<td><code>reshape</code>、<code>transpose</code>、<code>gather</code></td>
+<td>梯度按 forward 时的元素对应关系传回。用固定整数索引选择值时，梯度传给被取出的输入值，重复使用的值会累加。</td>
+</tr>
+<tr>
+<td><code>softmax</code>、<code>log_softmax</code>、<code>cross_entropy</code></td>
+<td>都有对 logits 的反传规则。Softmax 的各输出互相耦合。分类训练通常直接把 logits 交给 <code>cross_entropy</code>。</td>
+</tr>
+<tr>
+<td><code>argmax</code>、<code>round</code></td>
+<td><code>argmax</code> 返回整数索引，索引对分数没有可用的梯度路径。<code>round</code> 在台阶内斜率为零，在跳变处没有普通导数。</td>
+</tr>
+</tbody>
+</table></div>
+<p>例子里用的是 <code>clip</code> 的普通可导点。对于并列最小值，PyTorch 的 <code>amin</code> 会在并列元素间分配梯度，带 <code>dim</code> 的 <code>min</code> 则把梯度传到它返回的索引所指的元素。写训练代码时，遇到并列或边界就查具体 API，再用两三个标量做对拍。 <a href="https://docs.pytorch.org/docs/stable/generated/torch.amin.html">PyTorch · amin 与 min</a> · <a href="https://docs.pytorch.org/docs/stable/notes/autograd.html#gradients-for-non-differentiable-functions">PyTorch · 不可导点的处理</a></p>
+<p>还有一个独立的问题是<strong>计算有没有被 autograd 记录</strong>。<code>no_grad</code> 内的运算不进反传图，<code>detach()</code> 会切断当前值和它上游的连接。<code>.item()</code> 则取出 Python 数值，用于日志时很方便。若用这个数重新构造 tensor 当 loss，原来的梯度路径就丢了。对已经清空梯度的参数，梯度是零表示走通了某条路径但局部变化为零，<code>.grad is None</code> 则可以提示这次 backward 没有给该参数积累梯度。 <a href="https://docs.pytorch.org/docs/stable/notes/autograd.html">PyTorch · Autograd mechanics</a></p>
+<h2 id="3--用标量写一个最小-autograd">3 · 用标量写一个最小 autograd</h2>
+<p>Karpathy 的 micrograd 用标量计算图讲解 reverse-mode autodiff（从输出向输入反传）。这里采用同样的教学路径。每个节点保存 forward 的值和通向各输入的<strong>边</strong>，边上记录局部导数。Backward 先把节点排成输入在前、输出在后的顺序，再倒着走，保证共享节点先收齐两条路径的梯度。下面的代码可直接用 Python 运行。 <a href="https://github.com/karpathy/micrograd/blob/master/micrograd/engine.py">micrograd 源码</a> · <a href="https://www.youtube.com/watch?v=VMj-3S1tku0">Karpathy 原课</a></p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Scalar:</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, value, <span class="op">*</span>edges):</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.value <span class="op">=</span> value</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.edges <span class="op">=</span> edges          <span class="co"># 每条边是 (输入节点, 输出对该输入的局部导数)</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.grad <span class="op">=</span> <span class="fl">0.0</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> add(a, b):</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Scalar(a.value <span class="op">+</span> b.value, (a, <span class="fl">1.0</span>), (b, <span class="fl">1.0</span>))</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> multiply(a, b):</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Scalar(a.value <span class="op">*</span> b.value, (a, b.value), (b, a.value))</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> mean(a, b):</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Scalar((a.value <span class="op">+</span> b.value) <span class="op">/</span> <span class="dv">2</span>, (a, <span class="fl">0.5</span>), (b, <span class="fl">0.5</span>))</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> minimum(a, b):</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 这个小引擎在并列时平分梯度。</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> a.value <span class="op">==</span> b.value:</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> Scalar(a.value, (a, <span class="fl">0.5</span>), (b, <span class="fl">0.5</span>))</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    selected <span class="op">=</span> a <span class="cf">if</span> a.value <span class="op">&lt;</span> b.value <span class="cf">else</span> b</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Scalar(selected.value, (selected, <span class="fl">1.0</span>))</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> clip(x, lo, hi):</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>    value <span class="op">=</span> <span class="bu">min</span>(<span class="bu">max</span>(x.value, lo), hi)</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    slope <span class="op">=</span> <span class="bu">float</span>(lo <span class="op">&lt;</span> x.value <span class="op">&lt;</span> hi)  <span class="co"># 这个小引擎在边界选择 0</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Scalar(value, (x, slope))</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> backward(loss):</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>    order <span class="op">=</span> []</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>    seen <span class="op">=</span> <span class="bu">set</span>()</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> visit(node):</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> node <span class="kw">in</span> seen:</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>        seen.add(node)</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> parent, _ <span class="kw">in</span> node.edges:</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>            visit(parent)</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>        order.append(node)            <span class="co"># 输入先入列表，输出后入列表</span></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>    visit(loss)</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> node <span class="kw">in</span> order:</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>        node.grad <span class="op">=</span> <span class="fl">0.0</span>               <span class="co"># 这次演示从空梯度开始</span></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>    loss.grad <span class="op">=</span> <span class="fl">1.0</span></span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> node <span class="kw">in</span> <span class="bu">reversed</span>(order):</span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> parent, slope <span class="kw">in</span> node.edges:</span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>            parent.grad <span class="op">+=</span> node.grad <span class="op">*</span> slope</span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> regression_loss(w):</span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>    p1 <span class="op">=</span> clip(multiply(Scalar(<span class="fl">2.0</span>), w), <span class="op">-</span><span class="fl">1.0</span>, <span class="fl">1.0</span>)</span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>    p2 <span class="op">=</span> minimum(w, Scalar(<span class="fl">0.75</span>))</span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>    e1 <span class="op">=</span> add(p1, Scalar(<span class="op">-</span><span class="fl">0.8</span>))</span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>    e2 <span class="op">=</span> add(p2, Scalar(<span class="op">-</span><span class="fl">1.0</span>))</span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> mean(multiply(e1, e1), multiply(e2, e2))</span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>w <span class="op">=</span> Scalar(<span class="fl">0.25</span>)</span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> regression_loss(w)</span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a>backward(loss)</span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>w_new <span class="op">=</span> Scalar(w.value <span class="op">-</span> <span class="fl">0.1</span> <span class="op">*</span> w.grad)</span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(loss.value, w.grad, w_new.value, regression_loss(w_new).value)</span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a><span class="co"># 约 0.32625, -1.35, 0.385, 0.1895625</span></span></code></pre></div>
+<p>注意 <code>multiply(e1, e1)</code> 有两条边指向同一个节点。<code>seen</code> 确保节点只进一次访问顺序，<code>+=</code> 确保两条边都贡献梯度。对 <code>w</code> 也是同一个道理。对拍时，可以在离折点较远的 <code>w</code> 上试 <code>(L(w+ε) − L(w−ε))/(2ε)</code>。这个有限差分用来检查方向和数值，backward 本身用的是链式法则。</p>
+<p>把同一张图写成 PyTorch 训练代码，<code>backward()</code> 和 <code>optimizer.step()</code> 的分工就能直接对上。安装了 PyTorch 后可运行这一段。</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>w <span class="op">=</span> torch.nn.Parameter(torch.tensor(<span class="fl">0.25</span>))</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>optimizer <span class="op">=</span> torch.optim.SGD([w], lr<span class="op">=</span><span class="fl">0.1</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>optimizer.zero_grad()</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>p1 <span class="op">=</span> torch.clamp(<span class="dv">2</span> <span class="op">*</span> w, <span class="op">-</span><span class="fl">1.0</span>, <span class="fl">1.0</span>)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>p2 <span class="op">=</span> torch.minimum(w, w.new_tensor(<span class="fl">0.75</span>))</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> torch.stack(((p1 <span class="op">-</span> <span class="fl">0.8</span>) <span class="op">**</span> <span class="dv">2</span>, (p2 <span class="op">-</span> <span class="fl">1.0</span>) <span class="op">**</span> <span class="dv">2</span>)).mean()</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>loss.backward()     <span class="co"># 填写 w.grad</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>optimizer.step()    <span class="co"># 用 w.grad 更新 w</span></span></code></pre></div>
+<h2 id="4--回到-td3">4 · 回到 TD3</h2>
+<p><strong>Actor update</strong> 的 <code>loss_a = −Q1(S, Actor(S)).mean()</code> 会经过 <code>mean</code>，再穿过 Critic 对动作的计算，回到 Actor 参数。固定 Critic 权重时，Critic 仍然可以对输入动作求导。</p>
+<p><strong>TD target</strong> 的 <code>min(Q1_target, Q2_target)</code> 和 action clip 在 <code>no_grad</code> 里构造训练标签 <code>Y</code>。Critic backward 沿 <code>Q_online(S, A) → (Q_online − Y)² → mean</code> 这条图反传，<code>Y</code> 在这次更新中作为固定标签。 <a href="../t3-sim-to-rl/td3/README.md#2--完整训练流程">TD3 完整训练流程</a></p>
+<h2 id="5--一次预测和一次实现">5 · 一次预测和一次实现</h2>
+<ul>
+<li><strong>判读。</strong> 看过 <code>w = 0.25</code> 的完整演示后，先预测 <code>w = 0.60</code> 时两条路径对 <code>w</code> 的梯度各是零还是非零。用一句话说是哪一个运算决定的，再切到 Backward 核对。</li>
+<li><strong>亲手实现。</strong> 把 <code>mean(a, b)</code> 改成任意长度的平均。保留其余代码，先用同一个节点计算 <code>mean(x, x, x)</code>，再调用 <code>backward</code>。验收是能解释为什么 <code>x.grad</code> 等于 <code>1</code>，并能用有限差分核对。</li>
+<li><strong>AI claim audit。</strong> 「用了 <code>clip</code>，optimizer 就无法更新这个参数。」用 <code>w = 0.60</code> 的两条路径给出一个反例，说明什么条件才会让本例的总梯度变成零。</li>
+</ul><footer>Markdown 是编辑源稿；本文件由 tools/build_reading_edition.py 生成。公式使用原生 MathML，图为内嵌 SVG，不依赖网络脚本。外链材料需联网，仓库内链接需保留相对目录。</footer></main></div><script>"use strict";
+
+const lab = document.getElementById("backward-lab");
+const weightButtons = Array.from(lab.querySelectorAll("[data-weight]"));
+const phaseButtons = Array.from(lab.querySelectorAll("[data-phase]"));
+const summary = document.getElementById("lab-summary");
+let weight = 0.25;
+let phase = "forward";
+
+function trace(w) {
+  const scaled = 2 * w;
+  const clipped = Math.min(1, Math.max(-1, scaled));
+  const minimum = Math.min(w, 0.75);
+  const residual1 = clipped - 0.8;
+  const residual2 = minimum - 1;
+  const error1 = residual1 ** 2;
+  const error2 = residual2 ** 2;
+  const clipSlope = Number(-1 < scaled && scaled < 1);
+  const minSlope = w === 0.75 ? 0.5 : Number(w < 0.75);
+  const gradScaled = residual1 * clipSlope;
+  const gradInput = residual2 * minSlope;
+  return {
+    scaled, clipped, minimum, error1, error2, clipSlope, minSlope,
+    residual1, residual2, gradScaled, gradInput,
+    loss: (error1 + error2) / 2,
+    gradWeight: 2 * gradScaled + gradInput,
+  };
+}
+
+const format = value => Number(value.toFixed(8)).toString();
+const gradient = value => "此值收到的梯度 " + format(value);
+
+function render() {
+  const t = trace(weight);
+  const rows = {
+    weight: [weight, "路径 1 " + format(2 * t.gradScaled) + " + 路径 2 (" +
+      format(t.gradInput) + ") = " + format(t.gradWeight)],
+    scale: [t.scaled, gradient(t.gradScaled)],
+    input: [weight, gradient(t.gradInput)],
+    clip: [t.clipped, gradient(t.residual1) + " · 局部斜率 " + t.clipSlope],
+    min: [t.minimum, gradient(t.residual2) + " · 对 w 的局部斜率 " + t.minSlope],
+    error1: [t.error1, gradient(0.5)],
+    error2: [t.error2, gradient(0.5)],
+    loss: [t.loss, "反传起点 ∂loss/∂loss = 1"],
+  };
+  for (const [name, [value, detail]] of Object.entries(rows)) {
+    const node = lab.querySelector('[data-node="' + name + '"]');
+    node.querySelector("[data-value]").textContent = format(value);
+    const annotation = node.querySelector("[data-grad]");
+    annotation.textContent = detail;
+    annotation.hidden = phase === "forward";
+  }
+  const backward = phase !== "forward";
+  lab.dataset.phase = phase;
+  lab.querySelector('[data-node="clip"]').dataset.zeroSlope = String(backward && t.clipSlope === 0);
+  lab.querySelector('[data-node="min"]').dataset.zeroSlope = String(backward && t.minSlope === 0);
+  for (const button of weightButtons) {
+    button.setAttribute("aria-pressed", String(Number(button.dataset.weight) === weight));
+  }
+  for (const button of phaseButtons) {
+    button.setAttribute("aria-pressed", String(button.dataset.phase === phase));
+  }
+  if (phase === "forward") {
+    summary.textContent = "从上往下算。两条平方误差汇入 mean，得到一个标量 loss。";
+  } else if (phase === "backward") {
+    summary.textContent = "从下往上看。mean 给两条平方误差各传 0.5。各路径沿局部导数反传，最后在 w 相加。";
+  } else {
+    const next = weight - 0.1 * t.gradWeight;
+    summary.textContent = "学习率 0.1。用 w.grad = " + format(t.gradWeight) +
+      " 更新 w，" + format(weight) + " → " + format(next) +
+      "。重新 forward 后，loss " + format(t.loss) + " → " + format(trace(next).loss) + "。";
+  }
+}
+
+for (const button of weightButtons) {
+  button.addEventListener("click", () => {
+    weight = Number(button.dataset.weight);
+    render();
+  });
+}
+for (const button of phaseButtons) {
+  button.addEventListener("click", () => {
+    phase = button.dataset.phase;
+    render();
+  });
+}
+render();</script></body></html>

@@ -1,0 +1,48 @@
+<section class="autograd-lab" id="backward-lab" aria-labelledby="lab-title">
+  <h3 id="lab-title">同一个 w，两条梯度路径</h3>
+  <div class="lab-controls">
+    <div role="group" aria-label="选择初始权重">
+      <button type="button" data-weight="0.25" aria-pressed="true">w = 0.25</button>
+      <button type="button" data-weight="0.60" aria-pressed="false">w = 0.60</button>
+      <button type="button" data-weight="0.90" aria-pressed="false">w = 0.90</button>
+    </div>
+    <div role="group" aria-label="选择计算阶段">
+      <button type="button" data-phase="forward" aria-pressed="true">1 Forward</button>
+      <button type="button" data-phase="backward" aria-pressed="false">2 Backward</button>
+      <button type="button" data-phase="step" aria-pressed="false">3 SGD step</button>
+    </div>
+  </div>
+  <div class="lab-node lab-shared" data-node="weight">
+    <strong>共享参数 w</strong><output data-value></output><small data-grad hidden></small>
+  </div>
+  <div class="lab-branches">
+    <div class="lab-branch" aria-label="第一条路径">
+      <h4>路径 1 · 标签 0.8</h4>
+      <div class="lab-node" data-node="scale">
+        <strong>2w</strong><output data-value></output><small data-grad hidden></small>
+      </div>
+      <div class="lab-node lab-operation" data-node="clip">
+        <strong>clip(2w, −1, 1)</strong><output data-value></output><small data-grad hidden></small>
+      </div>
+      <div class="lab-node" data-node="error1">
+        <strong>平方误差</strong><output data-value></output><small data-grad hidden></small>
+      </div>
+    </div>
+    <div class="lab-branch" aria-label="第二条路径">
+      <h4>路径 2 · 标签 1.0</h4>
+      <div class="lab-node" data-node="input">
+        <strong>w</strong><output data-value></output><small data-grad hidden></small>
+      </div>
+      <div class="lab-node lab-operation" data-node="min">
+        <strong>min(w, 0.75)</strong><output data-value></output><small data-grad hidden></small>
+      </div>
+      <div class="lab-node" data-node="error2">
+        <strong>平方误差</strong><output data-value></output><small data-grad hidden></small>
+      </div>
+    </div>
+  </div>
+  <div class="lab-node lab-shared" data-node="loss">
+    <strong>mean → loss</strong><output data-value></output><small data-grad hidden></small>
+  </div>
+  <p class="lab-summary" id="lab-summary" aria-live="polite"></p>
+</section>

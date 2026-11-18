@@ -14,3 +14,5 @@ For the first investigation, see [Learning robotics RL with an AI tutor](rl-lear
 ## Reading this initial export
 
 Learning Gym started in a larger robotics repository. This public snapshot preserves course materials, browser reading editions, toy scripts, and recorded learning examples. Historical mentions of company plans, private code, and runs provide context. Where the underlying evidence is unavailable to public readers, the source is marked as private. Use the standalone toy checks and public papers for independently reproducible comparisons.
+
+For feedback from a human reading the TD3-first handout, see [TD3-first learner feedback](td3-first-lesson-feedback.md). It records both what helped and what the first revision omitted.

@@ -66,6 +66,8 @@
 | A1·S06 | Induction head：ICL 的机制细胞 | 2 层 attention-only 模型复现 copy 回路 |
 | A1·S07 | 复现 burstiness → ICL（Chan et al. 玩具版） | 成簇采样 vs 均匀采样的 ICL 出现对比 |
 
+A1·S03 补充阅读覆盖计算图、常见运算的梯度和一次 SGD 更新。[Autograd 讲义](modules/a1-transformer/autograd-primer.md) · [HTML 互动版](modules/a1-transformer/autograd-primer.html)
+
 S06–S07 机制背景：[ICL 机制精编](references/icl-s1-gen15-digest.md)。
 
 **Exit Gate**：用[「Transformer 15 问 debug checklist」](references/transformer-digest.md)逐问过一遍 π0.5 的 attention 相关代码并入档（pi05-training.md（内部资料） 为入口）。
@@ -135,6 +137,8 @@ S05–S07 案例背景：[ICL 机制精编](references/icl-s1-gen15-digest.md)�
 
 ## RL 基础讲义与课次的对应（T2/T3 共用）
 
+**TD3-first 试读入口：** [第一篇](modules/t3-sim-to-rl/td3/README.md) → 分次问答 → P4 核心实现与固定 batch 验证 → TD3 对应公开代码 → 控制任务诊断与单变量改进。无需先通读 foundations、通过整套 P0 或完成 PPO/SAC。此路径不新增 Lesson，不更改 Pass 或课程级 Exit Gate；下列完整复习路线仍可选。
+
 **整体学习顺序：恢复价值学习 → PPO → TD3 → SAC → 生成策略后训练 → 可微动力学 BPTT。** 用 [RL 基础讲义](modules/t3-sim-to-rl/rl-foundations-primer.html) 和 [统一温习讲义](modules/t3-sim-to-rl/rl-control-review-primer.html) 读机制，按 [分段实践](modules/t3-sim-to-rl/rl-control-practice.md) 做伪代码、实现和对照。P 编号是练习入口，沿用既有编号；不按编号线性推进。BPTT 在经典算法基础之后可独立选修，不依赖做完生成策略后训练。
 
 | 阶段 | 课次 / 练习 | 亲手做什么；达到什么程度再推进 |
@@ -147,7 +151,7 @@ S05–S07 案例背景：[ICL 机制精编](references/icl-s1-gen15-digest.md)�
 | 可微动力学 BPTT | T3·S10（选修）/ P8 | 亲手写短时可微 rollout；用解析/数值 oracle 和断开 dynamics 梯度的对照验证 credit path，再读 SuperMimic。能区分 learned dynamics、critic bootstrap 和真实 simulator。 |
 | 应用与其它专题 | T3·S03/S04/S08/S09 / P3、P5、P6 | DexLab teacher/student、sim2real、capstone 和 Zero-Shot RL 继续按原课次进入；无需插在三种经典算法之间。 |
 
-**进入研究代码对照的门槛：** 在不看参考实现时，为 PPO、TD3、SAC 各重建一次更新的伪代码，标出数据来源、target、gradient path、optimizer 与更新时序，并在固定 batch 上用独立 oracle 验证三者的核心更新。PPO 和 TD3 的闭环是默认实践；参考训练尚未验证可行时，可以先完成上述门槛进入代码判读，闭环继续单独验收。[Pass 规则](learning-modes.md)仍适用：伪代码和判读属于 `Understand` 证据；`Implement` 要有学员核心代码、可运行验证和 P-T-I-E；`Improve` 还需能区分原因的干预及回归证据。原有课程级 Exit Gate 不变。
+**完整跨算法研究代码对照的门槛：** 在不看参考实现时，为 PPO、TD3、SAC 各重建一次更新的伪代码，标出数据来源、target、gradient path、optimizer 与更新时序，并在固定 batch 上用独立 oracle 验证三者的核心更新。PPO 和 TD3 的闭环是默认实践；参考训练尚未验证可行时，可以先完成上述门槛进入代码判读，闭环继续单独验收。[Pass 规则](learning-modes.md)仍适用：伪代码和判读属于 `Understand` 证据；`Implement` 要有学员核心代码、可运行验证和 P-T-I-E；`Improve` 还需能区分原因的干预及回归证据。原有课程级 Exit Gate 不变。TD3-first 路径可在完成 TD3 自身的核心重建与固定 batch 验证后，先阅读对应 TD3 update；不把三算法门槛套在这一局部判读上。
 
 [RL 基础讲义：VLA online RL 背后的强化学习](modules/t3-sim-to-rl/rl-foundations-primer.md)（[HTML 阅读版](modules/t3-sim-to-rl/rl-foundations-primer.html)）承担下列课次的 `Understand` 层：学员通读对应知识点，完成有上下文的判读并写下 revised mental model；各课的实践深度见上表。
 
