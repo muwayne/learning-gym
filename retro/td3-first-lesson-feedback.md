@@ -31,3 +31,16 @@ Wayne asked for one teaching principle. Explain the mechanism first, then use co
 After drafting, reread the lesson from the beginning as a first-time student. Check whether each new term has a purpose and a definition before it is used, each block answers a question the reader already has, and each example resolves that question. Revise places where the reader would have to guess a dependency or search another section for the relevant lines. Check code and numeric evidence separately from this reading pass.
 
 When reviewing this PR, read a difficult block such as Target sync in order. Check that the learner can tell why it exists, which parameters it changes, and where the result is used without searching the full pseudocode. For a live follow-up, group questions around a stated learning goal, keep the scenario and data fixed, and start from the learner's actual uncertainty. The earlier pacing and context feedback is recorded separately. [RL learning retrospective](rl-learning.md#where-the-teaching-lost-context)
+
+## Follow-up on live tutoring
+
+The learner asked to answer several related questions in one turn. The first batch still required the learner to infer which replay row, term or stage the tutor meant. In particular, a question about replacing the minimum of two target Critic estimates jumped from a change in a single TD target to a claim about trained control performance. A shorter rewrite still elicited a request for the full context.
+
+The tutor then gave both replay rows, including the executed action, reward and terminal flag. Each question named the current block, supplied its known inputs, and stated what to write. The learner gave the terminal and nonterminal TD target expressions and placed the Actor update and all three target syncs correctly. Subsequent prompts exposed the distinction between an executed action and the action proposed by the online Actor. See the [session record](../learners/wayne/records/t3-s02.md) for the answers and the corrections provided by the tutor.
+
+- Keep **task goal**, **TD target**, and **target network** in English. Define the task condition, the numeric regression label, and the parameter copy separately before any question uses them.
+- Put a small batch of questions on one update. Give the learner the replay rows and any supplied estimates, identify the block, then say which expression, input or parameter write to report. When the setup is unclear, rebuild the whole prompt.
+- State what is being measured. With replay and the next action fixed, replacing the minimum changes the TD target calculation. To compare control performance, define a separate training and evaluation experiment.
+- Record the support provided with the answer. The stopping point was a guided pseudocode walkthrough. Independent implementation and experiments remain separate activities.
+
+The [tutor guide](../modules/t3-sim-to-rl/td3/tutor.md) now includes a complete question set using the same two rows.
