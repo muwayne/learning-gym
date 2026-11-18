@@ -1,40 +1,45 @@
 # TD3 第一篇 · 导师问答与后续学习思路
 
-> 配套[学员讲义](README.md)。本稿含答案；不要先把它整篇发给学员。目标是理解、实现、诊断与有证据的小改进，不要求发明算法或证明收敛。此稿是待试用设计，不是学习完成记录。
+> 配套[学员讲义](README.md)。本稿含导师答案，授课时只展示当前场景和题面。后续深度可按学员进展选择。现场反馈见[教学复盘](../../../retro/td3-first-lesson-feedback.md#follow-up-on-live-tutoring)。
 
 ## 开场与讲解
 
 先给一句目的：今天看懂一次 TD3 update，分清历史动作、训练 label 和 Actor 的梯度。无需完整 foundations、MDP 推导或 P0 测试。
 
-先讲连续动作挑战和 DDPG → TD3 的改动，再展示完整训练流程。用 debugger 分段读两个 update。变量定义在使用前；中文注释解释用途，保留 loss、no_grad、backward/step。不要展开环境 API、框架配置或网络层定义；也不要用不透明的 update() 代替核心学习步骤。
+先讲连续动作挑战和 DDPG → TD3 的改动，再展示完整训练流程。用 replay 表和相邻的编号伪代码走读一次 update，Debugger 可用于查看具体数值和梯度。先定义变量，再解释它在哪一步被读取或写回，保留 loss、no_grad、backward/step。
 
 基础只补到解决当前阻塞。答完疑问明确返回当前代码行，暂不需要的理论记为可选后续，不自动延长课程。需要图时只画当前的数据或梯度路径，不附加一份概念大全。
 
-## 问答：一次只出一题
+## 问答 · 沿同一个 replay batch 集中作答
 
-### 第一轮 · 已展示例子的单变量变式
+先说明本组要检查的能力，例如读出一次 update 的输入与参数写回。每题标出正在执行的 block、已知数据、改动项和回答形式。把几道关联的问题一次给齐，允许学员简答或标记不确定。先反馈答错、答漏和不确定的地方，再选一个贴近卡点的变式。若上下文缺失，重给场景和题面。
 
-题：只将 debugger 第一条 transition 的 terminated 从 0 改成 1，Y 会等于什么？为什么？
+术语统一为 **task goal**（环境任务要达到的条件）、**TD target**（Critic 这次拟合的数值，batch 中记作 `Y`）和 **target network**（经同步更新、参与计算 TD target 的参数副本）。
 
-导师答案：第一条的即时 reward −0.1；真正终止后不接未来估值。无需同时追加 truncation、n-step 或 GAE 问题。先仅反馈一致／不一致；学员请求解释时再指出第一处分歧。
+### 可直接展示的题组
 
-### 第二轮 · 动作身份
+滑块的 state 是 `[位置, 速度]`，action 是推力，task goal 是位置达到 `0.95`。环境此前产生了下表中的两条经验。当前从 replay 取出这批数据，开始第 2 次 Critic update，`policy_delay = 2`。
 
-题：保留那条 replay 经验，但当前 Actor 已输出不同动作。Critic loss 中的 a 要换成新动作吗？
+| 经验 | `S` | 实际执行的 `A` | `S_next` | reward `R` | `terminated` |
+| --- | --- | --- | --- | --- | --- |
+| ① 还在路上 | `[0.3, 0]` | `0.6` | `[0.6, 0.3]` | `−0.1` | `False` |
+| ② 到达终点 | `[0.6, 0.3]` | `0.5` | `[1.0, 0.4]` | `+1` | `True` |
 
-导师答案：不换，已观察到的奖励和后继属于实际动作。Actor loss 另用当前 Actor 动作。若需要提示“再看奖励属于谁”，记录该提示，不将答案算作独立完成。
+1. **算 TD target。** 对经验①，`Actor_target(S_next)` 已产生下一步 action 并完成 smoothing，两个 target Critic 对同一 `(S_next, A_next)` 的估值分别约为 `0.32` 和 `0.18`，`γ = 0.9`。对经验②，环境已终止。分别写出两条经验的 TD target 算式。只看进入最终数值的项。
+2. **更新 online Critics。** TD target 已算完。以经验①为例，写出 `Q1` 回归用的 `(S, A)`，指出用哪个数算预测误差，并说明 `Q2` 是否使用同一个 TD target。
+3. **更新 Actor 并同步参数。** 两个 online Critic 已完成本次 optimizer step。现在 `Actor` 对经验①的原状态 `S` 提议 `0.2`。写出 `Q1` 给它评分时用的 state/action，再把 online `Actor`、`Actor_target`、`Q1_target`、`Q2_target` 分配到 optimizer step 或用 `τ` 插值的步骤。
 
-### 第三轮 · 梯度路径
+### 导师答案与按需追问
 
-先回看 debugger 的 Actor 步骤。题：如果在 `Q1(s, actor(s))` 整体外加 no_grad，Actor 还能靠这个 loss 更新吗？
+1. 用题中的舍入值，经验①为 `−0.1 + 0.9 × 0.18 = 0.062`，经验②为 `+1`。batch forward 可以先算出终止行的估值，terminal mask 使它对该行最终数值的贡献为零。
+2. 两个 online Critics 都读 `([0.3, 0], 0.6)`，各自的预测和同一行 TD target `0.062` 比较。若问整批 optimizer step 后某行预测的方向，要交代 batch 内的样本共享 Critic 参数。
+3. Actor loss 使用 `Q1([0.3, 0], 0.2)`；固定 `Q1` 参数，保留对 action 的梯度。如果误写 `Q1(S, Actor(S_next))`，请学员指出是哪一步把两个 state 混在了一起。第 2 次 Critic update 后先用 optimizer 更新 online Actor，再用 `τ` 把三个 target networks 分别朝对应 online 参数插值。之后每隔 `policy_delay` 次 Critic update 重复。
 
-导师答案：不能；计算图被截断。固定 Q1 参数不等于切断 Q1 对动作的梯度。可画一条 `Actor parameters → action → Q score → loss` 的图，只解释这条路径。
+比较机制时，先说清观察范围。若固定经验①和 `A_next`，只把 `min(Q1_target, Q2_target)` 改成取 `Q1_target`，就问这条经验在 optimizer step 前的 TD target 如何改变。讨论控制效果时另设有训练与独立评测的对照；两者各自记录。
 
-### 第四轮 · 把流程重新组织起来
+### 把流程重新组织起来
 
-收起完整 update，保留变量说明、公式和 API 查询。请学员组织：构造 target → Critics BP → 延迟 Actor BP → 同步 targets，并解释一次动作身份与梯度边界。
-
-允许查公式，不考默写。只填模板不够；导师给出下一步、变量或位置均记提示。无需一次做完四轮；疲劳时在当前理解点停下，下一次用新变式接续。
+学员可查公式与 API，用几行中文或伪代码串起 replay → TD target → Critic update → delayed Actor update → target sync，说明每步读什么、写谁的参数。若用骨架、提示、重述题面或事后纠正，记录提供了什么帮助。学员可在完成本次走读后暂停，日后按需要用新变式校准或进入实现。
 
 ## 从理解进入工程能力：后续四个自然停止点
 
@@ -43,11 +48,11 @@
 3. **接上控制任务并诊断**：先校准参考实现预算，再运行学员实现。出现低 return 时，同时查看 action saturation、Q 与回报估计、更新计数和参考对照；不预设低 return 就是代码错误。训练预算、seeds、评测与停止条件按 P4/P2 准备规则另定，不在讲义中凭空保证成绩。
 4. **小改进**：从已有证据提出一个局部解释，先预测、只改一个主要变量、比较效果和成本、检查回归。可选先在固定 batch 把 target min 换为 Q1：若 Q1 已是较小值，两者相同；选 Q1 较大的样本才能看到差别。不能由此断言真实训练 return 必然提高或下降。
 
-前三个问答只建立基础，不自动达到 Implement/Improve。工程练习分次完成，沿用现有 Pass/record/ledger；不新增 CSV 字段，不改历史记录。用 `[独立]` / `[提示: 原话]` 标记 session 过程；是否写入 CSV 备注仍未决定。随后某课的新变式独立完成才作为掌握证据，刚获提示后原题重做不算。
+按 [Pass completion gates](../../../learning-modes.md#pass-completion-gates) 区分问答、独立复原和实际实现的证据。记录学员作答与获得的帮助，验收实现时看学员自己的 runnable artifact 和对照结果。
 
-## 延伸顺序是建议，不是新门槛
+## 后续学习顺序
 
-先用本篇试读确认负担，再完成 TD3 的首个可运行核心。随后可选择 PPO 对照其 rollout、固定 advantage 和 log-prob ratio，或 SAC 对照随机策略、entropy 与 soft target。后续顺序由实际理解与任务需要调整，不为了凑算法清单同时学习三个。
+按学员目标选择后续课次。可带着已经走读的 TD3 update 去读 PPO 的 rollout、固定 advantage 和 log-prob ratio，或读 SAC 的 stochastic policy、entropy 与 soft TD target。回到 TD3 做工程练习时，从上面的自然停止点选一项。
 
 ## PR #1 原始版本的编辑与审阅记录
 

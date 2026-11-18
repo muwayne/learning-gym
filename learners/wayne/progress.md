@@ -4,9 +4,9 @@
 
 ## 下一节
 
-- **当前入口（2026-11-06）**：[P0 恢复题](../../modules/t3-sim-to-rl/rl-control-practice.md#p0--恢复价值学习) → PPO → TD3 → SAC，再按[课表](../../curriculum.md#rl-基础讲义与课次的对应t2t3-共用)进入生成策略与 BPTT。先集中核查 backup policy、n-step、reset 前 final state 与 Double Q；之后学员重建经典更新伪代码、固定 batch 对拍。RLT / EXPO 旧证据用于校准，P0 新题待答；尚无本轮 learner experiments。
+- **下一课是 PPO，等待 Wayne 提供材料。** TD3 问答已收尾，停在有提示的一次 update 复述。问答结果与后续可选实践见 [TD3 session 记录](records/t3-s02.md)。
 
-- **阅读材料**：[RL 基础讲义](../../modules/t3-sim-to-rl/rl-foundations-primer.html) §2 起恢复；PPO 读[统一温习讲义](../../modules/t3-sim-to-rl/rl-control-review-primer.html) §2，TD3/SAC 回到基础讲义 §4。MDP/Bellman 按已读情况快速校准。
+- **按需温习材料**：[P0 恢复题](../../modules/t3-sim-to-rl/rl-control-practice.md#p0--恢复价值学习)与 [RL 基础讲义](../../modules/t3-sim-to-rl/rl-foundations-primer.html)。此前的 backup policy、n-step、reset 前 final state 与 Double Q 可留到相关场景再核查。
 - T3·S06 EXPO select + edit（已暂停，[记录](records/t3-s06.md)）：讲义已读并有问答证据；经典更新对拍后，从 [P7](../../modules/t3-sim-to-rl/rl-control-practice.md#p7--生成策略后训练比较改进发生在哪里) 选一个机制对照，再进入已有 [EXPO-lite 练习](../../modules/t3-sim-to-rl/s06-expressive-policy-value-maximization.md) 或真实复现证据。Learner harness 的核心函数仍是 TODO，未运行学员实验。
 - T 线另一入口：T1·S01 CPU toy 起点（[课表](../../modules/t1-training-stages/s01-training-stage-map.md) · 实验计划（内部资料） · [记录](records/t1-s01.md)）。PR #75 已合并；按反馈改为简单 MLP toy → SmolVLA + RoboTwin → Cosmos。公共 toy base 已准备，下一步为学员 source 选择与预测；SmolVLA 未训练，U/I/M 未完成。
 - T3·S07 基础衔接与小实验已结课，本次不继续其完整 RLT 实践。
@@ -20,7 +20,7 @@
 |---|---|---|
 | T2·S01 | 1–10 | §1 自述清楚；§2 已作答一批，MC/TD、SARSA 比较和 n-step 有正确答项；backup-policy 身份错项、reset 和 Double Q 已讲解，待 P0 新场景确认，未完成 U |
 | T2·S07（选修） | 11–12 | 待读 |
-| T3·S02 | 13–17 | 待读 |
+| T3·S02 | 13–17 | TD3 专题已读并做完有提示的 update 走读，[记录](records/t3-s02.md)。基础讲义其余部分和 SAC 对照待后续 |
 | T3·S05 | 18–27 | 待读 |
 | T3·S06 | 28–29 + S06 讲义 | S06 讲义已通读；问答 6 题（[记录](records/t3-s06.md)），Understand 未收口 |
 | T3·S07 | 30–33 | 待读；此前已有 actor–critic 基础衔接证据 |
@@ -89,7 +89,7 @@ T3 这四课的 `Implement` / `Improve` 层计划用 X2/X3 等真实复现工作
 | T2·S06 | PPO 对齐 CleanRL | ・ |
 | T2·S07 | 选修：DQN / Double DQN | ・ |
 | T3·S01 | PPO 连续控制 | ・ |
-| T3·S02 | TD3 → SAC，共享 replay 与更新对照 | ▶ 温习讲义与 P4 设计就绪，未新增实践证据 |
+| T3·S02 | TD3 → SAC，共享 replay 与更新对照 | TD3 问答已暂停于伪代码走读，[记录](records/t3-s02.md)。未登记 Pass |
 | T3·S03 | Domain randomization + teacher-student | ・ |
 | T3·S04 | Sim2Real 判断框架 | ・ |
 | T3·S05 | Offline RL / AWR / IQL | ・ |
